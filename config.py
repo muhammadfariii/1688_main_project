@@ -22,7 +22,7 @@ class AppConfig:
         self.provider_name = "demo"
         self.provider_api_key = ""
         self.provider_base_url = "https://api.parse.bot"
-        self.demo_mode = True
+        self.demo_mode = false
         self.host = "0.0.0.0"
         self.port = int(os.environ.get("PORT", 8000))
         self.default_page_size = 20

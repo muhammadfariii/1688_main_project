@@ -923,9 +923,9 @@
 
       try {
         const resp = await fetch('/api/search/single', {
-          method: 'POST',
+          method: 'GET',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ product: product, factory_only: factoryOnly })
+          params: { product: product, factory_only: factoryOnly }
         });
 
         if (!resp.ok) {
@@ -1040,9 +1040,9 @@
 
       try {
         const resp = await fetch('/api/search/multi', {
-          method: 'POST',
+          method: 'GET',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ products: productLines })
+          params: { products: productLines }
         });
 
         if (!resp.ok) {
@@ -1136,7 +1136,7 @@
     async function exportSingle(format) {
       if (!currentSingleData) return;
       const form = document.createElement('form');
-      form.method = 'POST';
+      form.method = 'GET';
       form.action = `/api/export/single/${format}`;
       form.target = '_blank';
 
@@ -1154,7 +1154,7 @@
     async function exportMulti(format) {
       if (!currentMultiData) return;
       const form = document.createElement('form');
-      form.method = 'POST';
+      form.method = 'GET';
       form.action = `/api/export/multi/${format}`;
       form.target = '_blank';
 

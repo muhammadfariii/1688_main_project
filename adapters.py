@@ -261,9 +261,7 @@ class ParseBotAdapter(BaseProviderAdapter):
     def _get_endpoint(self) -> str:
         """Resolves target API endpoint URL based on base_url structure."""
         url = self.base_url.rstrip("/")
-        if "/scraper/" in url or url.endswith("/search") or url.endswith("/1688") or url.endswith("/run"):
-            return url
-        return f"{url}/search/1688"
+        return f"{url}/search_by_keyword"
 
     def test_connection(self) -> Dict[str, Any]:
         """Performs a test call or ping against the configured 1688 API provider."""
@@ -275,9 +273,9 @@ class ParseBotAdapter(BaseProviderAdapter):
             }
         
         endpoint = self._get_endpoint()
-        payload = {"query": "test", "keyword": "test", "page": 1, "pageSize": 1}
+        payload = {"keywords": "test", "page": 1, "pageSize": 1}
         try:
-            resp = requests.post(endpoint, json=payload, headers=self._get_headers(), timeout=10)
+            resp = requests.get(endpoint, params=payload, headers=self._get_headers(), timeout=10)
             if resp.status_code == 200:
                 return {
                     "success": True,
@@ -347,17 +345,12 @@ class ParseBotAdapter(BaseProviderAdapter):
 
         endpoint = self._get_endpoint()
         payload = {
-            "query": query,
-            "keyword": query,
-            "q": query,
-            "page": page,
-            "pageSize": page_size,
-            "page_size": page_size,
-            "limit": page_size
+            "keywords": query,
+            "page": page
         }
 
         try:
-            resp = requests.post(endpoint, json=payload, headers=self._get_headers(), timeout=self.timeout)
+            resp = requests.get(endpoint, params=payload, headers=self._get_headers(), timeout=self.timeout)
             resp.raise_for_status()
             data = resp.json()
             items = self._extract_items_from_response(data)

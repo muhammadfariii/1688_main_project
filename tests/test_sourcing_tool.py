@@ -157,31 +157,31 @@ class TestFastAPIEndpoints(unittest.TestCase):
         self.assertTrue(data["demo_mode"])
 
     def test_single_search_api(self):
-        resp = self.client.post("/api/search/single", json={"product": "Ceramic Mug", "factory_only": False})
+        resp = self.client.get("/api/search/single", params={"product": "Ceramic Mug", "factory_only": False})
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
         self.assertEqual(data["query"], "Ceramic Mug")
         self.assertGreater(data["total_count"], 0)
 
     def test_multi_search_api(self):
-        resp = self.client.post("/api/search/multi", json={"products": ["Pen", "Notebook", "Eraser"]})
+        resp = self.client.get("/api/search/multi", params={"products": ["Pen", "Notebook", "Eraser"]})
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
         self.assertEqual(data["total_queries"], 3)
         self.assertGreater(data["total_suppliers_found"], 0)
 
     def test_export_single_excel_api(self):
-        search_resp = self.client.post("/api/search/single", json={"product": "Tea Kettle"})
+        search_resp = self.client.get("/api/search/single", params={"product": "Tea Kettle"})
         data = search_resp.json()
-        export_resp = self.client.post("/api/export/single/excel", json=data)
+        export_resp = self.client.get("/api/export/single/excel", params=data)
         self.assertEqual(export_resp.status_code, 200)
         self.assertIn("application/vnd.openxmlformats", export_resp.headers["content-type"])
         self.assertGreater(len(export_resp.content), 1000)
 
     def test_export_multi_csv_api(self):
-        search_resp = self.client.post("/api/search/multi", json={"products": ["A", "B"]})
+        search_resp = self.client.get("/api/search/multi", params={"products": ["A", "B"]})
         data = search_resp.json()
-        export_resp = self.client.post("/api/export/multi/csv", json=data)
+        export_resp = self.client.get("/api/export/multi/csv", params=data)
         self.assertEqual(export_resp.status_code, 200)
         self.assertIn("text/csv", export_resp.headers["content-type"])
         self.assertGreater(len(export_resp.content), 200)
