@@ -16,31 +16,22 @@ class BaseProviderAdapter(abc.ABC):
 
     @abc.abstractmethod
     def search_single_product(self, query: str, page: int = 1, page_size: int = 20) -> List[Dict[str, Any]]:
-        """
-        Search 1688 for a single product query.
-        Returns a list of raw/standardized supplier and product records.
-        """
         pass
 
     @abc.abstractmethod
     def search_multi_products(self, queries: List[str]) -> Dict[str, List[Dict[str, Any]]]:
-        """
-        Search 1688 for multiple product queries.
-        Returns a dictionary mapping each query to its matching supplier records.
-        """
         pass
 
     @abc.abstractmethod
     def get_provider_info(self) -> Dict[str, Any]:
-        """Returns provider metadata and status."""
         pass
+
+    def test_connection(self) -> Dict[str, Any]:
+        return {"success": True, "message": "Provider operational"}
 
 
 class DemoAdapter(BaseProviderAdapter):
-    """
-    Demo/Mock adapter delivering rich, realistic 1688 supplier data.
-    Works completely offline without API keys for instant testing.
-    """
+    """Demo/Mock adapter delivering rich, realistic 1688 supplier data."""
 
     CHINESE_INDUSTRIAL_CLUSTERS = [
         ("Zhejiang Yongkang", "浙江永康", "Hardware & Drinkware Hub"),
@@ -55,7 +46,6 @@ class DemoAdapter(BaseProviderAdapter):
         ("Hebei Cangzhou", "河北沧州", "Glass Products & Packaging")
     ]
 
-    # Pre-defined mock vendor profiles for realistic multi-item coverage
     VENDOR_PROFILES = [
         {
             "brand_en": "Hengtai", "brand_cn": "恒泰",
@@ -137,7 +127,7 @@ class DemoAdapter(BaseProviderAdapter):
             "name": "Demo Provider (Realistic Mock)",
             "is_demo": True,
             "connected": True,
-            "description": "Built-in realistic sample data generator for instant testing without API credentials."
+            "description": "Built-in realistic sample data generator for testing without API credentials."
         }
 
     def _build_supplier_dict(self, profile: Dict[str, Any], query: str, seed_offset: int = 0) -> Dict[str, Any]:
@@ -161,7 +151,7 @@ class DemoAdapter(BaseProviderAdapter):
         rng = random.Random(abs(hash(f"{supplier_id}_{query}_{seed_offset}")))
         
         if profile["is_factory"]:
-            business_scope = f"Production, OEM/ODM custom fabrication, mould opening, and R&D for {query} and industrial supplies. Full factory export standards."
+            business_scope = f"Production, OEM/ODM custom fabrication, mould opening, and R&D for {query} and industrial supplies."
             sample_products = [
                 f"Custom OEM {query} (Food/Industrial Grade, Factory Direct)",
                 f"Wholesale Commercial {query} (High Capacity Spec)",
@@ -172,7 +162,7 @@ class DemoAdapter(BaseProviderAdapter):
             moq = f"{rng.choice([100, 200, 500, 1000])} pcs"
             contact_note = "1688 AliWangWang (Direct Factory Manager: Mr. Chen) / 1688 Verified Shop"
         else:
-            business_scope = f"Wholesale distribution, e-commerce retail, drop-shipping, and multi-category trading of {query} and daily commodities."
+            business_scope = f"Wholesale distribution, e-commerce retail, drop-shipping, and multi-category trading of {query}."
             sample_products = [
                 f"Ready-to-Ship Spot {query} (Mixed Colors Available)",
                 f"Low MOQ {query} for Online Sellers & Amazon/TikTok Shop",
@@ -211,7 +201,6 @@ class DemoAdapter(BaseProviderAdapter):
         clean_q = (query or "").strip().title()
         if not clean_q:
             return []
-        
         results = []
         for i, profile in enumerate(self.VENDOR_PROFILES):
             results.append(self._build_supplier_dict(profile, clean_q, seed_offset=i))
@@ -228,7 +217,6 @@ class DemoAdapter(BaseProviderAdapter):
                 item_seed = int(hashlib.md5(f"{brand}_{q}".encode("utf-8")).hexdigest()[:6], 16)
                 prob = (item_seed % 100) / 100.0
                 
-                # Top factory and broad trader have high coverage
                 if prob <= profile["coverage_tier"] or (v_idx < 2 and q_idx < 4):
                     results_for_item.append(self._build_supplier_dict(profile, q, seed_offset=q_idx))
             
@@ -239,15 +227,16 @@ class DemoAdapter(BaseProviderAdapter):
 
 class ParseBotAdapter(BaseProviderAdapter):
     """
-    Live 1688 data provider adapter (e.g. ParseBot or similar 1688 API service).
-    Connects to external REST API using server-side API keys.
+    Live 1688 data provider adapter (e.g. ParseBot / Parse.bot scraper API service).
+    Connects to external REST API / Scraper endpoint using server-side API keys.
     """
 
     def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None):
-        self.api_key = api_key or config.provider_api_key
-        self.base_url = (base_url or config.provider_base_url or "https://api.parsebot.com/v1").rstrip("/")
+        self.api_key = api_key if api_key is not None else config.provider_api_key
+        self.base_url = (base_url if base_url is not None else config.provider_base_url) or "https://api.parse.bot"
+        self.base_url = self.base_url.rstrip("/")
         self.provider_name = "parsebot"
-        self.timeout = 15
+        self.timeout = 20
 
     def get_provider_info(self) -> Dict[str, Any]:
         has_key = bool(self.api_key.strip())
@@ -256,46 +245,131 @@ class ParseBotAdapter(BaseProviderAdapter):
             "is_demo": False,
             "connected": has_key,
             "base_url": self.base_url,
-            "description": "Connects to ParseBot 1688 REST API service for real-time live product queries."
+            "description": f"Connects to ParseBot 1688 scraper API ({self.base_url}) for real-time product queries."
         }
 
     def _get_headers(self) -> Dict[str, str]:
         headers = {
             "Content-Type": "application/json",
-            "User-Agent": "1688-Sourcing-Tool/1.0"
+            "User-Agent": "1688-Sourcing-Tool/2.1"
         }
         if self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
             headers["X-API-Key"] = self.api_key
+            headers["Authorization"] = f"Bearer {self.api_key}"
         return headers
+
+    def _get_endpoint(self) -> str:
+        """Resolves target API endpoint URL based on base_url structure."""
+        url = self.base_url.rstrip("/")
+        if "/scraper/" in url or url.endswith("/search") or url.endswith("/1688") or url.endswith("/run"):
+            return url
+        return f"{url}/search/1688"
+
+    def test_connection(self) -> Dict[str, Any]:
+        """Performs a test call or ping against the configured 1688 API provider."""
+        if not self.api_key or not self.api_key.strip():
+            return {
+                "success": False,
+                "is_demo": False,
+                "error": "API Key is missing. Please configure PROVIDER_API_KEY in environment or config.local.json."
+            }
+        
+        endpoint = self._get_endpoint()
+        payload = {"query": "test", "keyword": "test", "page": 1, "pageSize": 1}
+        try:
+            resp = requests.post(endpoint, json=payload, headers=self._get_headers(), timeout=10)
+            if resp.status_code == 200:
+                return {
+                    "success": True,
+                    "is_demo": False,
+                    "status_code": resp.status_code,
+                    "message": f"Successfully connected to 1688 API endpoint at {endpoint}"
+                }
+            elif resp.status_code in (401, 403):
+                return {
+                    "success": False,
+                    "is_demo": False,
+                    "status_code": resp.status_code,
+                    "error": f"Authentication failed ({resp.status_code}). Please verify your PROVIDER_API_KEY."
+                }
+            else:
+                return {
+                    "success": False,
+                    "is_demo": False,
+                    "status_code": resp.status_code,
+                    "error": f"Provider returned HTTP {resp.status_code}: {resp.text[:250]}"
+                }
+        except requests.exceptions.RequestException as e:
+            return {
+                "success": False,
+                "is_demo": False,
+                "error": f"Could not connect to live API endpoint ({endpoint}): {str(e)}."
+            }
+
+    def _extract_items_from_response(self, data: Any) -> List[Dict[str, Any]]:
+        """Extracts item list from diverse 1688 / ParseBot API JSON schemas."""
+        if isinstance(data, list):
+            return data
+        if not isinstance(data, dict):
+            return []
+
+        for key in ("items", "offers", "products", "results", "list", "suppliers", "data", "records", "rows"):
+            if key in data:
+                val = data[key]
+                if isinstance(val, list):
+                    return val
+                if isinstance(val, dict):
+                    for subkey in ("items", "offers", "products", "results", "list", "suppliers", "data", "records", "rows"):
+                        if subkey in val and isinstance(val[subkey], list):
+                            return val[subkey]
+
+        if "result" in data:
+            r = data["result"]
+            if isinstance(r, list):
+                return r
+            if isinstance(r, dict):
+                for subkey in ("items", "offers", "products", "results", "list", "suppliers"):
+                    if subkey in r and isinstance(r[subkey], list):
+                        return r[subkey]
+
+        if any(k in data for k in ("company_name", "companyName", "shop_name", "shopName", "title", "product_name", "subject")):
+            return [data]
+
+        return []
 
     def search_single_product(self, query: str, page: int = 1, page_size: int = 20) -> List[Dict[str, Any]]:
         """
         Executes live query against 1688 provider API.
-        Maps returned vendor and product fields to standard schema.
+        Maps returned vendor and product fields to standard internal schema.
         """
-        if not self.api_key:
-            raise ValueError("ParseBot API Key is missing. Please configure PROVIDER_API_KEY in environment.")
+        if not self.api_key or not self.api_key.strip():
+            raise ValueError("API Key is missing. Please configure PROVIDER_API_KEY or switch to Demo Mode.")
 
-        endpoint = f"{self.base_url}/search/1688"
+        endpoint = self._get_endpoint()
         payload = {
             "query": query,
+            "keyword": query,
+            "q": query,
             "page": page,
             "pageSize": page_size,
-            "filter": {
-                "factoryOnly": False
-            }
+            "page_size": page_size,
+            "limit": page_size
         }
 
         try:
             resp = requests.post(endpoint, json=payload, headers=self._get_headers(), timeout=self.timeout)
             resp.raise_for_status()
             data = resp.json()
-            items = data.get("data", {}).get("items", []) or data.get("items", []) or []
+            items = self._extract_items_from_response(data)
             return [self._map_raw_item_to_standard(item) for item in items]
+        except requests.exceptions.HTTPError as e:
+            msg = f"1688 API HTTP Error ({resp.status_code}): {resp.text[:300]}"
+            print(f"[ParseBotAdapter] {msg}")
+            raise RuntimeError(msg)
         except requests.exceptions.RequestException as e:
-            print(f"[ParseBotAdapter] API request failed: {e}")
-            raise RuntimeError(f"Live 1688 API provider error: {str(e)}")
+            msg = f"Could not reach live API endpoint at '{endpoint}' ({str(e)}). If testing without live provider connection, switch to Demo Mode in the header settings."
+            print(f"[ParseBotAdapter] {msg}")
+            raise RuntimeError(msg)
 
     def search_multi_products(self, queries: List[str]) -> Dict[str, List[Dict[str, Any]]]:
         results = {}
@@ -310,39 +384,108 @@ class ParseBotAdapter(BaseProviderAdapter):
     def _map_raw_item_to_standard(self, raw: Dict[str, Any]) -> Dict[str, Any]:
         """
         Maps raw JSON from third-party provider to our internal standard supplier schema.
+        Handles diverse Chinese and English API response keys.
         """
-        supplier_name = raw.get("company_name") or raw.get("shop_name") or raw.get("seller_title") or "Unknown 1688 Seller"
+        supplier_name = (
+            raw.get("company_name") or
+            raw.get("companyName") or
+            raw.get("shop_name") or
+            raw.get("shopName") or
+            raw.get("seller_title") or
+            raw.get("sellerTitle") or
+            raw.get("seller_name") or
+            raw.get("supplier_name") or
+            raw.get("supplierName") or
+            raw.get("vendor_name") or
+            raw.get("company") or
+            "1688 Verified Seller"
+        )
+        
+        sup_id = str(
+            raw.get("company_id") or
+            raw.get("companyId") or
+            raw.get("seller_id") or
+            raw.get("sellerId") or
+            raw.get("member_id") or
+            raw.get("memberId") or
+            raw.get("shop_id") or
+            abs(hash(supplier_name))
+        )
+        
+        title = (
+            raw.get("title") or
+            raw.get("subject") or
+            raw.get("product_name") or
+            raw.get("productTitle") or
+            raw.get("name") or
+            raw.get("offer_name") or
+            "1688 Listed Item"
+        )
+
+        location = (
+            raw.get("city") or
+            raw.get("province") or
+            raw.get("location") or
+            raw.get("address") or
+            raw.get("region") or
+            "China"
+        )
+
+        shop_url = (
+            raw.get("shop_url") or
+            raw.get("shopUrl") or
+            raw.get("company_url") or
+            raw.get("companyUrl") or
+            raw.get("store_url") or
+            f"https://shop{sup_id}.1688.com"
+        )
+
+        item_url = (
+            raw.get("item_url") or
+            raw.get("itemUrl") or
+            raw.get("detail_url") or
+            raw.get("detailUrl") or
+            raw.get("offer_url") or
+            raw.get("offerUrl") or
+            raw.get("url") or
+            raw.get("link") or
+            ""
+        )
+
+        price = str(raw.get("price") or raw.get("price_range") or raw.get("unitPrice") or raw.get("priceRange") or raw.get("offer_price") or "Inquire")
+        moq = str(raw.get("moq") or raw.get("min_order_quantity") or raw.get("minOrderQuantity") or raw.get("quantityBegin") or raw.get("start_amount") or "1")
+
+        badges = raw.get("badges") or raw.get("tags") or raw.get("certifications") or raw.get("services") or []
+        if isinstance(badges, str):
+            badges = [badges]
+
         return {
-            "supplier_id": str(raw.get("company_id") or raw.get("seller_id") or raw.get("member_id") or abs(hash(supplier_name))),
+            "supplier_id": sup_id,
             "supplier_name": supplier_name,
             "company_name_en": raw.get("company_name_en", supplier_name),
             "company_name_cn": raw.get("company_name_cn", supplier_name),
-            "location": raw.get("city") or raw.get("province") or raw.get("location", "China"),
-            "city": raw.get("city", "China"),
-            "industrial_cluster": raw.get("cluster", "N/A"),
-            "business_scope": raw.get("business_scope") or raw.get("main_category") or raw.get("description", ""),
-            "factory_area_sqm": raw.get("plant_area_sqm") or raw.get("factory_size", 0),
-            "employees_count": raw.get("employee_count") or raw.get("staff_size", 0),
-            "registered_capital_k_rmb": raw.get("registered_capital_rmb_k", 0),
-            "years_in_business": raw.get("years_operating") or raw.get("shop_years", 0),
-            "badges": raw.get("badges") or raw.get("tags") or [],
-            "products_matched": [raw.get("title") or raw.get("product_name") or "1688 Listed Item"],
-            "primary_product": raw.get("title") or "1688 Product",
-            "price_range_rmb": str(raw.get("price") or raw.get("price_range") or "Inquire"),
-            "moq": str(raw.get("moq") or raw.get("min_order_quantity") or "1"),
-            "contact_info": raw.get("contact") or "1688 WangWang messaging system",
-            "shop_url": raw.get("shop_url") or raw.get("company_url") or "",
-            "item_url": raw.get("item_url") or raw.get("detail_url") or ""
+            "location": location,
+            "city": raw.get("city", location),
+            "industrial_cluster": raw.get("cluster") or raw.get("industrial_cluster") or "N/A",
+            "business_scope": raw.get("business_scope") or raw.get("main_category") or raw.get("businessScope") or raw.get("description") or "",
+            "factory_area_sqm": raw.get("plant_area_sqm") or raw.get("plantArea") or raw.get("factory_size") or raw.get("area") or 0,
+            "employees_count": raw.get("employee_count") or raw.get("employeeCount") or raw.get("staff_size") or raw.get("employees") or 0,
+            "registered_capital_k_rmb": raw.get("registered_capital_rmb_k") or raw.get("registeredCapital") or raw.get("capital") or 0,
+            "years_in_business": raw.get("years_operating") or raw.get("shop_years") or raw.get("yearsInBusiness") or raw.get("operating_years") or 0,
+            "badges": badges,
+            "products_matched": [title],
+            "primary_product": title,
+            "price_range_rmb": price,
+            "moq": moq,
+            "contact_info": raw.get("contact") or raw.get("contact_info") or "1688 AliWangWang Messaging System",
+            "shop_url": shop_url,
+            "item_url": item_url
         }
 
 
 def get_adapter(app_cfg: Optional[AppConfig] = None) -> BaseProviderAdapter:
-    """Factory helper to obtain the active provider adapter."""
+    """Factory helper to obtain the active provider adapter based on current configuration."""
     cfg = app_cfg or config
-    if cfg.demo_mode or not cfg.provider_api_key:
+    if cfg.demo_mode or not cfg.provider_api_key.strip():
         return DemoAdapter()
-    
-    if cfg.provider_name == "parsebot":
-        return ParseBotAdapter(api_key=cfg.provider_api_key, base_url=cfg.provider_base_url)
-    
-    return DemoAdapter()
+    return ParseBotAdapter(api_key=cfg.provider_api_key, base_url=cfg.provider_base_url)

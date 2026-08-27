@@ -9,24 +9,33 @@ from adapters import BaseProviderAdapter, get_adapter
 
 class SourcingSearchEngine:
     def __init__(self, adapter: Optional[BaseProviderAdapter] = None, classifier_instance: Optional[HeuristicSupplierClassifier] = None):
-        self.adapter = adapter or get_adapter()
+        self._explicit_adapter = adapter
         self.classifier = classifier_instance or classifier
 
+    @property
+    def adapter(self) -> BaseProviderAdapter:
+        if self._explicit_adapter is not None:
+            return self._explicit_adapter
+        return get_adapter()
+
     def search_single_product(self, product_query: str, factory_only: bool = False) -> Dict[str, Any]:
-        """
-        Executes single product search, classifies each supplier, and ranks by factory confidence.
-        """
         query = (product_query or "").strip()
+        active_adapter = self.adapter
+        provider_info = active_adapter.get_provider_info()
+        data_source = "demo" if provider_info.get("is_demo") else "live"
+
         if not query:
             return {
                 "query": "",
                 "total_count": 0,
                 "factories_count": 0,
                 "trading_count": 0,
+                "data_source": data_source,
+                "provider_info": provider_info,
                 "results": []
             }
 
-        raw_suppliers = self.adapter.search_single_product(query)
+        raw_suppliers = active_adapter.search_single_product(query)
         processed_results = []
         factories_count = 0
         trading_count = 0
@@ -38,15 +47,11 @@ class SourcingSearchEngine:
             elif classification.type == "Trading Company":
                 trading_count += 1
 
-            # Composite ranking priority:
-            # 1. Factory type (+1000)
-            # 2. Confidence percentage (0-100)
-            # 3. Scale bonuses (area, capital, years)
             rank_score = classification.confidence
             if classification.type == "Factory":
                 rank_score += 1000
             elif classification.type == "Trading Company":
-                rank_score += 100  # Below factory
+                rank_score += 100
 
             if factory_only and classification.type != "Factory":
                 continue
@@ -81,10 +86,7 @@ class SourcingSearchEngine:
             }
             processed_results.append(record)
 
-        # Sort descending by rank score (factories first, highest confidence first)
         processed_results.sort(key=lambda x: x["_rank_score"], reverse=True)
-
-        # Clean internal sorting key
         for res in processed_results:
             res.pop("_rank_score", None)
 
@@ -93,20 +95,21 @@ class SourcingSearchEngine:
             "total_count": len(processed_results),
             "factories_count": factories_count,
             "trading_count": trading_count,
+            "data_source": data_source,
+            "provider_info": provider_info,
             "results": processed_results
         }
 
     def search_multi_products(self, product_lines: List[str]) -> Dict[str, Any]:
-        """
-        Executes multi-product search, calculates supplier coverage across the full product list,
-        and ranks suppliers by product coverage and capability score.
-        """
         cleaned_queries = [line.strip() for line in product_lines if line and line.strip()]
-        # Remove duplicates while preserving order
         unique_queries = []
         for q in cleaned_queries:
             if q not in unique_queries:
                 unique_queries.append(q)
+
+        active_adapter = self.adapter
+        provider_info = active_adapter.get_provider_info()
+        data_source = "demo" if provider_info.get("is_demo") else "live"
 
         total_queries_count = len(unique_queries)
         if total_queries_count == 0:
@@ -114,13 +117,12 @@ class SourcingSearchEngine:
                 "queries": [],
                 "total_queries": 0,
                 "total_suppliers_found": 0,
+                "data_source": data_source,
+                "provider_info": provider_info,
                 "results": []
             }
 
-        # Query adapter for all items
-        results_by_query = self.adapter.search_multi_products(unique_queries)
-
-        # Aggregate by supplier
+        results_by_query = active_adapter.search_multi_products(unique_queries)
         supplier_map: Dict[str, Dict[str, Any]] = {}
 
         for query_item, suppliers_for_item in results_by_query.items():
@@ -160,16 +162,12 @@ class SourcingSearchEngine:
                         "item_url": sup.get("item_url")
                     })
 
-        # Calculate coverage metrics and composite scores
         ranked_suppliers = []
         for sup_id, data in supplier_map.items():
             covered_list = sorted(list(data["covered_products"]))
             covered_count = len(covered_list)
             coverage_pct = round((covered_count / total_queries_count) * 100, 1)
 
-            # Score formulation:
-            # Coverage points: up to 70 pts
-            # Classification quality: Factory = 30 pts, Uncertain = 15 pts, Trading = 10 pts
             type_bonus = 30 if data["classification"] == "Factory" else (15 if data["classification"] == "Uncertain" else 10)
             composite_score = round((coverage_pct * 0.70) + type_bonus)
 
@@ -197,7 +195,6 @@ class SourcingSearchEngine:
                 "shop_url": data["shop_url"]
             })
 
-        # Sort descending primarily by products_covered_count, then composite score, then confidence
         ranked_suppliers.sort(
             key=lambda x: (x["products_covered_count"], x["score"], x["confidence"]),
             reverse=True
@@ -207,5 +204,7 @@ class SourcingSearchEngine:
             "queries": unique_queries,
             "total_queries": total_queries_count,
             "total_suppliers_found": len(ranked_suppliers),
+            "data_source": data_source,
+            "provider_info": provider_info,
             "results": ranked_suppliers
         }
