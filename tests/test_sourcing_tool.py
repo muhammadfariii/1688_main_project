@@ -146,12 +146,12 @@ class TestFastAPIEndpoints(unittest.TestCase):
         self.client = TestClient(app)
 
     def test_get_index(self):
-        resp = self.client.get("/")
+        resp = self.client.post("/")
         self.assertEqual(resp.status_code, 200)
         self.assertIn("1688 Sourcing Tool", resp.text)
 
     def test_get_status(self):
-        resp = self.client.get("/api/status")
+        resp = self.client.post("/api/status")
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
         self.assertTrue(data["demo_mode"])

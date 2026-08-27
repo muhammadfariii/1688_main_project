@@ -80,7 +80,7 @@ async def reload_configuration():
     }
 
 
-@app.post("/api/config/toggle-mode")
+@app.post("/api/config/toggle-mode", response_class=HTMLResponse)
 async def toggle_demo_mode(payload: ToggleModeRequest):
     config.set_demo_mode(payload.demo_mode)
     return {
