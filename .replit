@@ -1,4 +1,4 @@
-modules = ["python-3.11"]
+modules = ["python-3.11", "nodejs-24"]
 
 run = "uvicorn app:app --host 0.0.0.0 --port 8000"
 entrypoint = "app.py"
@@ -38,3 +38,11 @@ waitForPort = 8000
 
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[userenv]
+
+[userenv.shared]
+provider_name = "parsebot"
+provider_api_key = "pmx_47744145266284952786bd82187618de"
+provider_base_url = "https://api.parse.bot/scraper/bce3cd9b-591a-4e87-a406-6e57ab0dd092"
+demo_mode = "false"
