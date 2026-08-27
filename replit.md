@@ -1,15 +1,14 @@
-# [Project name]
+# 1688 Sourcing Tool
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A FastAPI web app for finding likely 1688 source factories, comparing supplier coverage, and exporting sourcing results.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- `uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000}` — run the FastAPI server
+- `python app.py` — run the server using the app's configured host and port
+- `pip install -r requirements.txt` — install Python dependencies
+- `pytest` — run the test suite
+- Demo mode is enabled by default; live provider settings use `PROVIDER_API_KEY`, `PROVIDER_NAME`, `PROVIDER_BASE_URL`, and `DEMO_MODE`
 
 ## Stack
 

@@ -1,0 +1,1 @@
+- [GitHub import access](github-import-access.md) — authenticated GitHub file APIs may block CI metadata; import runtime files separately.

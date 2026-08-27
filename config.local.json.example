@@ -1,0 +1,6 @@
+{
+  "provider_name": "demo",
+  "provider_api_key": "",
+  "provider_base_url": "https://api.parsebot.com/v1",
+  "demo_mode": true
+}
