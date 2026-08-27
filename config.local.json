@@ -1,6 +1,6 @@
 {
-  "provider_name": "demo",
-  "provider_api_key": "",
-  "provider_base_url": "https://api.parsebot.com/v1",
-  "demo_mode": true
+  "provider_name": "parsebot",
+  "provider_api_key": "pmx_47744145266284952786bd82187618de",
+  "provider_base_url": "https://api.parse.bot/scraper/bce3cd9b-591a-4e87-a406-6e57ab0dd092",
+  "demo_mode": false
 }
