@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1688 Sourcing Tool — Factory & Supplier Sourcing</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --secondary: #059669;
+      --secondary-hover: #047857;
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      --factory-bg: #dcfce7;
+      --factory-text: #15803d;
+      --factory-border: #86efac;
+      --trading-bg: #fef3c7;
+      --trading-text: #b45309;
+      --trading-border: #fde68a;
+      --uncertain-bg: #f1f5f9;
+      --uncertain-text: #64748b;
+      --uncertain-border: #cbd5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: var(--slate-800);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Navigation / Header */
+    header {
+      background: white;
+      border-bottom: 1px solid var(--slate-200);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      background: linear-gradient(135deg, #ff6000 0%, #ff8533 100%);
+      color: white;
+      font-weight: 800;
+      font-size: 1.1rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-title h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--slate-900);
+    }
+
+    .brand-title p {
+      font-size: 0.8rem;
+      color: var(--slate-600);
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .badge-mode {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.35rem 0.8rem;
+      border-radius: 9999px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+    }
+
+    .badge-mode.live {
+      background: #ecfdf5;
+      color: #047857;
+      border-color: #a7f3d0;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #2563eb;
+      animation: pulse 2s infinite;
+    }
+
+    .badge-mode.live .status-dot {
+      background: #10b981;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.1); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1280px;
+      width: 100%;
+      margin: 1.5rem auto;
+      padding: 0 1.5rem;
+      flex: 1;
+    }
+
+    /* Tabs */
+    .tabs-nav {
+      display: flex;
+      border-bottom: 2px solid var(--slate-200);
+      margin-bottom: 1.5rem;
+      gap: 0.5rem;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 0.85rem 1.4rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--slate-600);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tab-btn:hover {
+      color: var(--primary);
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: white;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+
+    /* Card Panels */
+    .card {
+      background: white;
+      border-radius: 10px;
+      border: 1px solid var(--slate-200);
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      margin-bottom: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-bottom: 0.4rem;
+    }
+
+    .card-desc {
+      font-size: 0.875rem;
+      color: var(--slate-600);
+      margin-bottom: 1.25rem;
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--slate-700);
+      margin-bottom: 0.4rem;
+    }
+
+    .input-text, .input-textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--slate-300);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .input-text:focus, .input-textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .input-textarea {
+      min-height: 140px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .quick-chips {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.6rem;
+    }
+
+    .chip-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--slate-600);
+    }
+
+    .chip-btn {
+      background: var(--slate-100);
+      border: 1px solid var(--slate-200);
+      border-radius: 9999px;
+      padding: 0.25rem 0.65rem;
+      font-size: 0.75rem;
+      color: var(--slate-700);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .chip-btn:hover {
+      background: var(--primary-light);
+      border-color: #93c5fd;
+      color: var(--primary);
+    }
+
+    .form-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background 0.15s ease;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-primary:disabled {
+      background: var(--slate-300);
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: white;
+      color: var(--slate-700);
+      border: 1px solid var(--slate-300);
+      padding: 0.5rem 0.9rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
+    }
+
+    .btn-secondary:hover {
+      background: var(--slate-50);
+      border-color: var(--slate-400);
+    }
+
+    .btn-excel {
+      background: #ecfdf5;
+      color: #065f46;
+      border-color: #a7f3d0;
+    }
+
+    .btn-excel:hover {
+      background: #d1fae5;
+    }
+
+    .btn-csv {
+      background: #f8fafc;
+      color: #334155;
+      border-color: #cbd5e1;
+    }
+
+    .btn-csv:hover {
+      background: #f1f5f9;
+    }
+
+    /* Results Header & Summary */
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--slate-200);
+    }
+
+    .results-summary {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--slate-800);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .pill-count {
+      background: var(--slate-100);
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      color: var(--slate-700);
+    }
+
+    .export-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid var(--slate-200);
+      background: white;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.875rem;
+    }
+
+    th {
+      background: var(--slate-100);
+      color: var(--slate-700);
+      font-weight: 700;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--slate-200);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--slate-200);
+      vertical-align: top;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: #f8fafc;
+    }
+
+    /* Supplier Cell Components */
+    .supplier-name-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-width: 240px;
+    }
+
+    .supplier-title {
+      font-weight: 700;
+      color: var(--slate-900);
+      text-decoration: none;
+    }
+
+    .supplier-title:hover {
+      color: var(--primary);
+      text-decoration: underline;
+    }
+
+    .supplier-cn {
+      font-size: 0.8rem;
+      color: var(--slate-600);
+    }
+
+    .supplier-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-top: 0.2rem;
+    }
+
+    .badge-tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      background: var(--slate-100);
+      color: var(--slate-700);
+      border: 1px solid var(--slate-200);
+    }
+
+    .badge-super {
+      background: #fef3c7;
+      color: #92400e;
+      border-color: #fde68a;
+    }
+
+    .badge-type {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .badge-factory {
+      background: var(--factory-bg);
+      color: var(--factory-text);
+      border: 1px solid var(--factory-border);
+    }
+
+    .badge-trading {
+      background: var(--trading-bg);
+      color: var(--trading-text);
+      border: 1px solid var(--trading-border);
+    }
+
+    .badge-uncertain {
+      background: var(--uncertain-bg);
+      color: var(--uncertain-text);
+      border: 1px solid var(--uncertain-border);
+    }
+
+    .confidence-meter {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .progress-bar-bg {
+      width: 60px;
+      height: 7px;
+      background: var(--slate-200);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 9999px;
+    }
+
+    .progress-bar-fill.factory {
+      background: var(--secondary);
+    }
+
+    .progress-bar-fill.trading {
+      background: #d97706;
+    }
+
+    .tags-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      max-width: 320px;
+    }
+
+    .tag-pill {
+      font-size: 0.75rem;
+      background: var(--slate-100);
+      color: var(--slate-700);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid var(--slate-200);
+    }
+
+    .tag-pill.covered {
+      background: #ecfdf5;
+      color: #065f46;
+      border-color: #a7f3d0;
+      font-weight: 600;
+    }
+
+    .tag-pill.missing {
+      background: #f8fafc;
+      color: #94a3b8;
+      border-color: #e2e8f0;
+      text-decoration: line-through;
+    }
+
+    .signal-details-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+      margin-top: 0.25rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
+    .signal-details-btn:hover {
+      text-decoration: underline;
+    }
+
+    .signals-box {
+      margin-top: 0.4rem;
+      font-size: 0.75rem;
+      background: var(--slate-50);
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid var(--slate-200);
+      color: var(--slate-700);
+      display: none;
+    }
+
+    .signals-box.open {
+      display: block;
+    }
+
+    .signals-box ul {
+      margin-left: 1rem;
+    }
+
+    /* State banners */
+    .empty-state {
+      padding: 3rem 1.5rem;
+      text-align: center;
+      color: var(--slate-600);
+    }
+
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      stroke: var(--slate-400);
+      margin-bottom: 0.75rem;
+    }
+
+    .spinner {
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top: 3px solid white;
+      width: 16px;
+      height: 16px;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Footer */
+    footer {
+      background: white;
+      border-top: 1px solid var(--slate-200);
+      padding: 1.25rem 2rem;
+      font-size: 0.8rem;
+      color: var(--slate-600);
+      text-align: center;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">1688</div>
+      <div class="brand-title">
+        <h1>1688 Sourcing Tool</h1>
+        <p>Manufacturer classification, supplier coverage analysis & export</p>
+      </div>
+    </div>
+    <div class="header-status">
+      <div id="modeBadge" class="badge-mode">
+        <span class="status-dot"></span>
+        <span id="modeText">Checking Status...</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main>
+    <!-- Navigation Tabs -->
+    <div class="tabs-nav">
+      <button class="tab-btn active" id="tabSingleBtn" onclick="switchTab('single')">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+        Single Product Search
+      </button>
+      <button class="tab-btn" id="tabMultiBtn" onclick="switchTab('multi')">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+        Multiple Products (Coverage)
+      </button>
+    </div>
+
+    <!-- TAB 1: Single Product Search -->
+    <div id="tabSingleContent">
+      <div class="card">
+        <div class="card-title">Single Product Factory Search</div>
+        <div class="card-desc">Enter a product name to search 1688 suppliers. The engine analyzes company data and heuristic signals to rank verified source factories first.</div>
+        
+        <form id="singleSearchForm" onsubmit="handleSingleSearch(event)">
+          <div class="form-group">
+            <label for="singleProductInput">Product Name / Keyword</label>
+            <input type="text" id="singleProductInput" class="input-text" placeholder="e.g., Stainless Steel Water Bottle, 1.3L Borosilicate Glass Jar, Silicone Spatula..." required autocomplete="off">
+            <div class="quick-chips">
+              <span class="chip-label">Quick test:</span>
+              <button type="button" class="chip-btn" onclick="setSingleProduct('Stainless Steel Water Bottle')">Stainless Steel Water Bottle</button>
+              <button type="button" class="chip-btn" onclick="setSingleProduct('1.3L Borosilicate Glass Jar')">1.3L Glass Jar</button>
+              <button type="button" class="chip-btn" onclick="setSingleProduct('Silicone Kitchen Spatula')">Silicone Spatula</button>
+              <button type="button" class="chip-btn" onclick="setSingleProduct('Wireless Fast Charger Stand')">Wireless Charger</button>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <div>
+              <label style="font-weight: normal; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem;">
+                <input type="checkbox" id="factoryOnlyCheckbox"> Factory only (hide trading companies)
+              </label>
+            </div>
+            <button type="submit" class="btn-primary" id="btnSingleSearch">
+              <span>Search Factories</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Single Product Results Container -->
+      <div id="singleResultsContainer" style="display: none;">
+        <div class="card">
+          <div class="results-header">
+            <div class="results-summary">
+              <span id="singleResultsCount">Found 0 suppliers</span>
+              <span id="singleFactoryPill" class="pill-count">0 Factories</span>
+            </div>
+            <div class="export-group">
+              <button type="button" class="btn-secondary btn-excel" onclick="exportSingle('excel')">
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Export Excel (.xlsx)
+              </button>
+              <button type="button" class="btn-secondary btn-csv" onclick="exportSingle('csv')">
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Export CSV
+              </button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table id="singleTable">
+              <thead>
+                <tr>
+                  <th>Supplier & Location</th>
+                  <th>Classification</th>
+                  <th>Confidence</th>
+                  <th>Plant & Scale</th>
+                  <th>Matched Product & Price</th>
+                  <th>Contact & Shop</th>
+                </tr>
+              </thead>
+              <tbody id="singleTableBody">
+                <!-- Rows injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: Multiple Products Search (Coverage) -->
+    <div id="tabMultiContent" style="display: none;">
+      <div class="card">
+        <div class="card-title">Multiple Products Supplier Coverage Search</div>
+        <div class="card-desc">Paste 5 to 15 product lines. The sourcing tool scans 1688 suppliers, aggregates their product catalogs, and ranks them by how many requested items they can supply under one roof.</div>
+
+        <form id="multiSearchForm" onsubmit="handleMultiSearch(event)">
+          <div class="form-group">
+            <label for="multiProductsInput">Products List (One product per line)</label>
+            <textarea id="multiProductsInput" class="input-textarea" placeholder="Stainless steel bottle&#10;Kitchen organizer&#10;Silicone spatula&#10;Coffee mug&#10;Lunch box&#10;Food container&#10;Cutting board&#10;Chef knife" required></textarea>
+            <div class="quick-chips">
+              <span class="chip-label">Sample lists:</span>
+              <button type="button" class="chip-btn" onclick="loadSampleKitchenList()">Load Kitchenware (10 Items)</button>
+              <button type="button" class="chip-btn" onclick="loadSampleStationeryList()">Load Stationery (8 Items)</button>
+              <button type="button" class="chip-btn" onclick="loadSampleFitnessList()">Load Fitness Gear (6 Items)</button>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <div></div>
+            <button type="submit" class="btn-primary" id="btnMultiSearch">
+              <span>Find Suppliers by Coverage</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Multi Product Results Container -->
+      <div id="multiResultsContainer" style="display: none;">
+        <div class="card">
+          <div class="results-header">
+            <div class="results-summary">
+              <span id="multiResultsSummary">Analyzed 0 products across 0 suppliers</span>
+            </div>
+            <div class="export-group">
+              <button type="button" class="btn-secondary btn-excel" onclick="exportMulti('excel')">
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Export Excel (.xlsx)
+              </button>
+              <button type="button" class="btn-secondary btn-csv" onclick="exportMulti('csv')">
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Export CSV
+              </button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table id="multiTable">
+              <thead>
+                <tr>
+                  <th>Supplier & Location</th>
+                  <th>Products Covered</th>
+                  <th>Coverage %</th>
+                  <th>Score</th>
+                  <th>Classification</th>
+                  <th>Covered vs. Missing Catalog</th>
+                  <th>Contact & Link</th>
+                </tr>
+              </thead>
+              <tbody id="multiTableBody">
+                <!-- Rows injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Initial Placeholder State when no search executed -->
+    <div id="welcomePlaceholder" class="card empty-state">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      <h3 style="font-size: 1.1rem; color: var(--slate-800); margin-bottom: 0.35rem;">Ready to Source</h3>
+      <p style="font-size: 0.875rem; max-width: 500px; margin: 0 auto;">Select <strong>Single Product</strong> to classify factories for one item, or <strong>Multiple Products</strong> to find suppliers with maximum catalog overlap.</p>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    1688 Sourcing Tool &bull; Heuristic Factory Classification Engine &bull; Ready for Replit & Cloud Deployment
+  </footer>
+
+  <script>
+    let currentSingleData = null;
+    let currentMultiData = null;
+
+    // Load initial provider and mode status
+    async function loadStatus() {
+      try {
+        const resp = await fetch('/api/status');
+        if (resp.ok) {
+          const data = await resp.json();
+          const badge = document.getElementById('modeBadge');
+          const text = document.getElementById('modeText');
+          if (data.demo_mode) {
+            badge.className = 'badge-mode';
+            text.innerText = 'Demo Mode (Mock Data)';
+          } else {
+            badge.className = 'badge-mode live';
+            text.innerText = 'Live Mode: ' + (data.provider_name || 'Connected');
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch /api/status:', err);
+      }
+    }
+
+    function switchTab(tab) {
+      const btnSingle = document.getElementById('tabSingleBtn');
+      const btnMulti = document.getElementById('tabMultiBtn');
+      const contentSingle = document.getElementById('tabSingleContent');
+      const contentMulti = document.getElementById('tabMultiContent');
+
+      if (tab === 'single') {
+        btnSingle.classList.add('active');
+        btnMulti.classList.remove('active');
+        contentSingle.style.display = 'block';
+        contentMulti.style.display = 'none';
+      } else {
+        btnMulti.classList.add('active');
+        btnSingle.classList.remove('active');
+        contentMulti.style.display = 'block';
+        contentSingle.style.display = 'none';
+      }
+    }
+
+    function setSingleProduct(val) {
+      document.getElementById('singleProductInput').value = val;
+    }
+
+    function loadSampleKitchenList() {
+      const list = [
+        "Stainless steel water bottle",
+        "Silicone kitchen spatula",
+        "Borosilicate glass storage jar",
+        "Ceramic coffee mug",
+        "Insulated stainless steel lunch box",
+        "Bamboo cutting board",
+        "Kitchen counter organizer rack",
+        "Stainless steel chef knife",
+        "Vegetable fruit peeler",
+        "Glass oil sprayer bottle"
+      ];
+      document.getElementById('multiProductsInput').value = list.join("\n");
+    }
+
+    function loadSampleStationeryList() {
+      const list = [
+        "Gel ink pen 0.5mm black",
+        "Hardcover spiral notebook A5",
+        "Pastel highlighter set",
+        "Dust-free student eraser",
+        "Canvas pencil case pouch",
+        "Stainless steel scissors",
+        "Adhesive sticky notes memo pad",
+        "Metal binder clips box"
+      ];
+      document.getElementById('multiProductsInput').value = list.join("\n");
+    }
+
+    function loadSampleFitnessList() {
+      const list = [
+        "Latex resistance loop bands",
+        "Non-slip TPE yoga mat",
+        "Adjustable skipping jump rope",
+        "Trigger point foam roller",
+        "Neoprene hand dumbbells set",
+        "Deep tissue massage gun"
+      ];
+      document.getElementById('multiProductsInput').value = list.join("\n");
+    }
+
+    function toggleSignals(btn, boxId) {
+      const box = document.getElementById(boxId);
+      if (box.classList.contains('open')) {
+        box.classList.remove('open');
+        btn.innerText = 'View classification signals ▾';
+      } else {
+        box.classList.add('open');
+        btn.innerText = 'Hide classification signals ▴';
+      }
+    }
+
+    // Handle Single Product Search
+    async function handleSingleSearch(event) {
+      event.preventDefault();
+      const product = document.getElementById('singleProductInput').value.trim();
+      const factoryOnly = document.getElementById('factoryOnlyCheckbox').checked;
+      if (!product) return;
+
+      const btn = document.getElementById('btnSingleSearch');
+      const origHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Searching...';
+
+      try {
+        const resp = await fetch('/api/search/single', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product: product, factory_only: factoryOnly })
+        });
+
+        if (!resp.ok) {
+          const err = await resp.json();
+          alert('Search Error: ' + (err.detail || resp.statusText));
+          return;
+        }
+
+        const data = await resp.json();
+        currentSingleData = data;
+        renderSingleResults(data);
+        document.getElementById('welcomePlaceholder').style.display = 'none';
+        document.getElementById('singleResultsContainer').style.display = 'block';
+      } catch (err) {
+        alert('Network request failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+      }
+    }
+
+    function renderSingleResults(data) {
+      const tbody = document.getElementById('singleTableBody');
+      tbody.innerHTML = '';
+
+      document.getElementById('singleResultsCount').innerText = `Found ${data.total_count} suppliers for "${data.query}"`;
+      document.getElementById('singleFactoryPill').innerText = `${data.factories_count} Factories, ${data.trading_count} Trading`;
+
+      data.results.forEach((item, idx) => {
+        const tr = document.createElement('tr');
+
+        // Type badge class
+        let typeBadgeClass = 'badge-uncertain';
+        let progressClass = '';
+        if (item.classification === 'Factory') {
+          typeBadgeClass = 'badge-factory';
+          progressClass = 'factory';
+        } else if (item.classification === 'Trading Company') {
+          typeBadgeClass = 'badge-trading';
+          progressClass = 'trading';
+        }
+
+        // Badges HTML
+        const badgesHtml = (item.badges || []).map(b => {
+          const isSuper = b.includes('超级') || b.includes('Super');
+          return `<span class="badge-tag ${isSuper ? 'badge-super' : ''}">${b}</span>`;
+        }).join(' ');
+
+        // Signals list HTML
+        const signalsHtml = (item.signals || []).map(s => `<li>${s}</li>`).join('');
+        const signalBoxId = `single-signal-${idx}`;
+
+        tr.innerHTML = `
+          <td>
+            <div class="supplier-name-cell">
+              <a href="${item.shop_url}" target="_blank" rel="noopener noreferrer" class="supplier-title">${item.company_name_en || item.supplier_name}</a>
+              <div class="supplier-cn">${item.company_name_cn || ''}</div>
+              <div style="font-size: 0.75rem; color: var(--slate-600);">📍 ${item.location || 'China'}</div>
+              <div class="supplier-badges">${badgesHtml}</div>
+            </div>
+          </td>
+          <td>
+            <span class="badge-type ${typeBadgeClass}">${item.classification}</span>
+          </td>
+          <td>
+            <div class="confidence-meter">
+              <span style="font-weight: 700; font-size: 0.9rem;">${item.confidence_percent}</span>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill ${progressClass}" style="width: ${item.confidence}%"></div>
+              </div>
+            </div>
+            <button type="button" class="signal-details-btn" onclick="toggleSignals(this, '${signalBoxId}')">View classification signals ▾</button>
+            <div class="signals-box" id="${signalBoxId}">
+              <ul>${signalsHtml}</ul>
+            </div>
+          </td>
+          <td>
+            <div style="font-size: 0.8rem; line-height: 1.4;">
+              <div><strong>Plant:</strong> ${item.factory_area_sqm ? Number(item.factory_area_sqm).toLocaleString() + ' m²' : 'N/A'}</div>
+              <div><strong>Staff:</strong> ${item.employees_count ? item.employees_count + ' people' : 'N/A'}</div>
+              <div><strong>Capital:</strong> ${item.registered_capital_k_rmb ? '¥' + Number(item.registered_capital_k_rmb).toLocaleString() + 'k RMB' : 'N/A'}</div>
+              <div><strong>Years:</strong> ${item.years_in_business ? item.years_in_business + ' yrs' : 'N/A'}</div>
+            </div>
+          </td>
+          <td>
+            <div style="font-size: 0.85rem; font-weight: 600; color: var(--slate-900); margin-bottom: 0.2rem;">
+              <a href="${item.item_url}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">${item.primary_product} ↗</a>
+            </div>
+            <div style="font-size: 0.8rem; color: #b45309; font-weight: 600;">Price: ${item.price_range_rmb || 'Inquire'}</div>
+            <div style="font-size: 0.75rem; color: var(--slate-600);">MOQ: ${item.moq || '1 pc'}</div>
+          </td>
+          <td>
+            <div style="font-size: 0.75rem; color: var(--slate-600); margin-bottom: 0.35rem;">${item.contact_info || '1688 WangWang'}</div>
+            <a href="${item.shop_url}" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; text-decoration: none;">Open 1688 Shop ↗</a>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Handle Multi Product Search
+    async function handleMultiSearch(event) {
+      event.preventDefault();
+      const rawText = document.getElementById('multiProductsInput').value.trim();
+      const productLines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      if (productLines.length === 0) return;
+
+      const btn = document.getElementById('btnMultiSearch');
+      const origHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Analyzing Catalogs...';
+
+      try {
+        const resp = await fetch('/api/search/multi', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ products: productLines })
+        });
+
+        if (!resp.ok) {
+          const err = await resp.json();
+          alert('Multi-search Error: ' + (err.detail || resp.statusText));
+          return;
+        }
+
+        const data = await resp.json();
+        currentMultiData = data;
+        renderMultiResults(data);
+        document.getElementById('welcomePlaceholder').style.display = 'none';
+        document.getElementById('multiResultsContainer').style.display = 'block';
+      } catch (err) {
+        alert('Network request failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+      }
+    }
+
+    function renderMultiResults(data) {
+      const tbody = document.getElementById('multiTableBody');
+      tbody.innerHTML = '';
+
+      document.getElementById('multiResultsSummary').innerText = `Analyzed ${data.total_queries} requested items across ${data.total_suppliers_found} suppliers`;
+
+      data.results.forEach((item, idx) => {
+        const tr = document.createElement('tr');
+
+        let typeBadgeClass = 'badge-uncertain';
+        let progressClass = '';
+        if (item.classification === 'Factory') {
+          typeBadgeClass = 'badge-factory';
+          progressClass = 'factory';
+        } else if (item.classification === 'Trading Company') {
+          typeBadgeClass = 'badge-trading';
+          progressClass = 'trading';
+        }
+
+        // Covered items tags
+        const coveredTags = (item.covered_products_list || []).map(p => `<span class="tag-pill covered">✓ ${p}</span>`).join(' ');
+        const missingTags = (item.missing_products_list || []).map(p => `<span class="tag-pill missing">✕ ${p}</span>`).join(' ');
+
+        tr.innerHTML = `
+          <td>
+            <div class="supplier-name-cell">
+              <a href="${item.shop_url}" target="_blank" rel="noopener noreferrer" class="supplier-title">${item.company_name_en || item.supplier_name}</a>
+              <div class="supplier-cn">${item.company_name_cn || ''}</div>
+              <div style="font-size: 0.75rem; color: var(--slate-600);">📍 ${item.location || 'China'}</div>
+            </div>
+          </td>
+          <td>
+            <div style="font-weight: 700; font-size: 1.05rem; color: var(--slate-900);">
+              ${item.products_covered_count} <span style="font-size: 0.8rem; font-weight: normal; color: var(--slate-600);">/ ${data.total_queries} items</span>
+            </div>
+          </td>
+          <td>
+            <div class="confidence-meter">
+              <span style="font-weight: 700; font-size: 0.9rem;">${item.coverage_percent_str}</span>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: ${item.coverage_percent}%"></div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div style="font-weight: 800; font-size: 1.1rem; color: ${item.score >= 80 ? '#059669' : (item.score >= 50 ? '#d97706' : '#64748b')};">
+              ${item.score}
+            </div>
+          </td>
+          <td>
+            <span class="badge-type ${typeBadgeClass}">${item.classification}</span>
+            <div style="font-size: 0.75rem; color: var(--slate-600); margin-top: 0.2rem;">Confidence: ${item.confidence_percent}</div>
+          </td>
+          <td>
+            <div class="tags-list">
+              ${coveredTags}
+              ${missingTags}
+            </div>
+          </td>
+          <td>
+            <div style="font-size: 0.75rem; color: var(--slate-600); margin-bottom: 0.35rem;">${item.contact_info || '1688 WangWang'}</div>
+            <a href="${item.shop_url}" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; text-decoration: none;">View Shop ↗</a>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Export functions
+    async function exportSingle(format) {
+      if (!currentSingleData) return;
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = `/api/export/single/${format}`;
+      form.target = '_blank';
+
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'data';
+      input.value = JSON.stringify(currentSingleData);
+      form.appendChild(input);
+
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+    }
+
+    async function exportMulti(format) {
+      if (!currentMultiData) return;
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = `/api/export/multi/${format}`;
+      form.target = '_blank';
+
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'data';
+      input.value = JSON.stringify(currentMultiData);
+      form.appendChild(input);
+
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+    }
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadStatus();
+    });
+  </script>
+</body>
+</html>
