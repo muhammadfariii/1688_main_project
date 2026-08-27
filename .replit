@@ -1,4 +1,4 @@
-modules = ["python-3.11", "nodejs-24"]
+modules = ["python-3.11"]
 
 run = "uvicorn app:app --host 0.0.0.0 --port 8000"
 entrypoint = "app.py"
