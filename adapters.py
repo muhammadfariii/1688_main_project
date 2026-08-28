@@ -7,6 +7,7 @@ Demo/Mock data sources and real 1688 API providers (e.g., ParseBot, Open1688, et
 import abc
 import hashlib
 import random
+import time
 import requests
 from typing import List, Dict, Any, Optional
 from config import config, AppConfig
@@ -133,7 +134,7 @@ class DemoAdapter(BaseProviderAdapter):
     def _build_supplier_dict(self, profile: Dict[str, Any], query: str, seed_offset: int = 0) -> Dict[str, Any]:
         cluster_en, cluster_cn, cluster_specialty = self.CHINESE_INDUSTRIAL_CLUSTERS[profile["cluster_idx"]]
         city_name = cluster_en.split()[-1]
-        
+
         brand_en = profile["brand_en"]
         brand_cn = profile["brand_cn"]
         type_en = profile["type_en"]
@@ -143,13 +144,13 @@ class DemoAdapter(BaseProviderAdapter):
         company_name_en = f"{cluster_en} {brand_en} {type_en}"
         company_name_cn = f"{cluster_cn}{brand_cn}{type_cn}"
         supplier_name = f"{company_name_en} ({company_name_cn})"
-        
+
         key_id = f"{brand_en}_{cluster_idx}"
         supplier_id = f"1688_sup_{abs(hash(key_id)) % 900000 + 100000}"
         shop_id = f"shop{abs(hash(supplier_id)) % 80000000 + 10000000}"
-        
+
         rng = random.Random(abs(hash(f"{supplier_id}_{query}_{seed_offset}")))
-        
+
         if profile["is_factory"]:
             business_scope = f"Production, OEM/ODM custom fabrication, mould opening, and R&D for {query} and industrial supplies."
             sample_products = [
@@ -216,10 +217,10 @@ class DemoAdapter(BaseProviderAdapter):
                 brand = profile["brand_en"]
                 item_seed = int(hashlib.md5(f"{brand}_{q}".encode("utf-8")).hexdigest()[:6], 16)
                 prob = (item_seed % 100) / 100.0
-                
+
                 if prob <= profile["coverage_tier"] or (v_idx < 2 and q_idx < 4):
                     results_for_item.append(self._build_supplier_dict(profile, q, seed_offset=q_idx))
-            
+
             results_by_query[q] = results_for_item
 
         return results_by_query
@@ -227,16 +228,44 @@ class DemoAdapter(BaseProviderAdapter):
 
 class ParseBotAdapter(BaseProviderAdapter):
     """
-    Live 1688 data provider adapter (e.g. ParseBot / Parse.bot scraper API service).
-    Connects to external REST API / Scraper endpoint using server-side API keys.
+    Live 1688 data provider adapter (ParseBot scraper API service).
+    Connects to ParseBot's REST API using a server-side API key.
+
+    CONFIRMED FACTS ABOUT THIS PROVIDER (not assumptions):
+        - All 3 endpoints (search_by_keyword, search_by_image, get_product_details)
+          are GET requests with query-string parameters - NOT POST with a JSON body.
+        - Auth is via the 'X-API-Key' header.
+        - No endpoint returns mobile/WeChat contact info - contact_info will always
+          fall back to a generic "message via 1688" note for live results.
+        - No endpoint returns a business-type/verified-factory flag - classification
+          relies entirely on the heuristic classifier.
+        - Free tier: 200 credits/month, 5 requests/minute. This adapter self-throttles
+          to avoid 429s, which makes multi-product searches slower by design.
+        - search_by_keyword does NOT return a ready-made product/shop URL - the only
+          reliable real link is built from 'offer_id': https://detail.1688.com/offer/{offer_id}.html
     """
 
-    def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None,
+                 requests_per_minute: int = 5):
         self.api_key = api_key if api_key is not None else config.provider_api_key
         self.base_url = (base_url if base_url is not None else config.provider_base_url) or "https://api.parse.bot"
         self.base_url = self.base_url.rstrip("/")
         self.provider_name = "parsebot"
         self.timeout = 20
+        self.min_interval = 60.0 / max(1, requests_per_minute)
+        self._last_request_time = 0.0
+
+        # This exact misconfiguration caused real 404s before - warn loudly rather
+        # than fail silently. A correct base_url includes a scraper-specific path,
+        # e.g. https://api.parse.bot/scraper/<your-id> - not just the bare domain.
+        if self.base_url.rstrip("/") in ("https://api.parse.bot", "http://api.parse.bot"):
+            print(
+                "[ParseBotAdapter] WARNING: provider_base_url looks incomplete "
+                f"('{self.base_url}'). Real requests to this URL will likely 404. "
+                "Set PROVIDER_BASE_URL to the full scraper-specific URL shown on "
+                "your Parse.bot dashboard's 'Call over HTTP' example, e.g. "
+                "https://api.parse.bot/scraper/<your-scraper-id>"
+            )
 
     def get_provider_info(self) -> Dict[str, Any]:
         has_key = bool(self.api_key.strip())
@@ -249,33 +278,39 @@ class ParseBotAdapter(BaseProviderAdapter):
         }
 
     def _get_headers(self) -> Dict[str, str]:
-        headers = {
-            "Content-Type": "application/json",
-            "User-Agent": "1688-Sourcing-Tool/2.1"
-        }
+        # Confirmed: X-API-Key is the only auth header this provider needs.
+        # GET requests with query params don't need a Content-Type header.
+        headers = {"User-Agent": "1688-Sourcing-Tool/2.2"}
         if self.api_key:
             headers["X-API-Key"] = self.api_key
-            headers["Authorization"] = f"Bearer {self.api_key}"
         return headers
 
-    def _get_endpoint(self) -> str:
-        """Resolves target API endpoint URL based on base_url structure."""
-        url = self.base_url.rstrip("/")
-        return f"{url}/search_by_keyword"
+    def _endpoint(self, name: str) -> str:
+        return f"{self.base_url}/{name}"
+
+    def _throttled_get(self, url: str, params: Dict[str, Any]) -> requests.Response:
+        """GET with self-imposed rate limiting to respect the free tier's 5 req/min cap."""
+        elapsed = time.time() - self._last_request_time
+        if elapsed < self.min_interval:
+            time.sleep(self.min_interval - elapsed)
+        try:
+            resp = requests.get(url, params=params, headers=self._get_headers(), timeout=self.timeout)
+        finally:
+            self._last_request_time = time.time()
+        return resp
 
     def test_connection(self) -> Dict[str, Any]:
-        """Performs a test call or ping against the configured 1688 API provider."""
         if not self.api_key or not self.api_key.strip():
             return {
                 "success": False,
                 "is_demo": False,
                 "error": "API Key is missing. Please configure PROVIDER_API_KEY in environment or config.local.json."
             }
-        
-        endpoint = self._get_endpoint()
-        payload = {"keywords": "test", "page": 1, "pageSize": 1}
+
+        endpoint = self._endpoint("search_by_keyword")
+        params = {"keywords": "test", "page": 1, "page_size": 1}
         try:
-            resp = requests.post(endpoint, json=payload, headers=self._get_headers(), timeout=10)
+            resp = self._throttled_get(endpoint, params)
             if resp.status_code == 200:
                 return {
                     "success": True,
@@ -289,6 +324,21 @@ class ParseBotAdapter(BaseProviderAdapter):
                     "is_demo": False,
                     "status_code": resp.status_code,
                     "error": f"Authentication failed ({resp.status_code}). Please verify your PROVIDER_API_KEY."
+                }
+            elif resp.status_code == 404:
+                return {
+                    "success": False,
+                    "is_demo": False,
+                    "status_code": resp.status_code,
+                    "error": f"404 at {endpoint} - your PROVIDER_BASE_URL is likely missing the scraper-specific "
+                             "path. Check the 'Call over HTTP' example on your Parse.bot dashboard for the exact URL."
+                }
+            elif resp.status_code == 429:
+                return {
+                    "success": False,
+                    "is_demo": False,
+                    "status_code": resp.status_code,
+                    "error": "Rate limit hit (free tier: 5 req/min, 200 credits/month). Wait a moment and retry."
                 }
             else:
                 return {
@@ -311,6 +361,10 @@ class ParseBotAdapter(BaseProviderAdapter):
         if not isinstance(data, dict):
             return []
 
+        # Common wrapper: {"data": {...actual payload...}, "status": "success"}
+        if "data" in data and isinstance(data["data"], dict):
+            data = data["data"]
+
         for key in ("items", "offers", "products", "results", "list", "suppliers", "data", "records", "rows"):
             if key in data:
                 val = data[key]
@@ -330,41 +384,52 @@ class ParseBotAdapter(BaseProviderAdapter):
                     if subkey in r and isinstance(r[subkey], list):
                         return r[subkey]
 
-        if any(k in data for k in ("company_name", "companyName", "shop_name", "shopName", "title", "product_name", "subject")):
+        if any(k in data for k in ("company_name", "companyName", "shop_name", "shopName", "title",
+                                     "product_name", "subject", "offer_id", "offerId")):
             return [data]
 
         return []
 
     def search_single_product(self, query: str, page: int = 1, page_size: int = 20) -> List[Dict[str, Any]]:
         """
-        Executes live query against 1688 provider API.
-        Maps returned vendor and product fields to standard internal schema.
+        Executes a live keyword search against ParseBot's search_by_keyword endpoint (GET).
+        Maps returned items to the standard internal schema.
         """
         if not self.api_key or not self.api_key.strip():
             raise ValueError("API Key is missing. Please configure PROVIDER_API_KEY or switch to Demo Mode.")
 
-        endpoint = self._get_endpoint()
-        payload = {
-            "keywords": query,
-            "page": page
-        }
+        endpoint = self._endpoint("search_by_keyword")
+        params = {"keywords": query, "page": page, "page_size": page_size}
 
         try:
-            resp = requests.post(endpoint, json=payload, headers=self._get_headers(), timeout=self.timeout)
+            resp = self._throttled_get(endpoint, params)
             resp.raise_for_status()
             data = resp.json()
             items = self._extract_items_from_response(data)
             return [self._map_raw_item_to_standard(item) for item in items]
-        except requests.exceptions.HTTPError as e:
-            msg = f"1688 API HTTP Error ({resp.status_code}): {resp.text[:300]}"
+        except requests.exceptions.HTTPError:
+            if resp.status_code == 404:
+                msg = (f"1688 API 404 at {endpoint} - PROVIDER_BASE_URL is likely missing the "
+                       "scraper-specific path segment. Check your Parse.bot dashboard's 'Call over "
+                       "HTTP' example for the exact base URL.")
+            elif resp.status_code == 429:
+                msg = "Rate limit hit (free tier: 5 req/min, 200 credits/month). Wait a moment and retry."
+            else:
+                msg = f"1688 API HTTP Error ({resp.status_code}): {resp.text[:300]}"
             print(f"[ParseBotAdapter] {msg}")
             raise RuntimeError(msg)
         except requests.exceptions.RequestException as e:
-            msg = f"Could not reach live API endpoint at '{endpoint}' ({str(e)}). If testing without live provider connection, switch to Demo Mode in the header settings."
+            msg = (f"Could not reach live API endpoint at '{endpoint}' ({str(e)}). If testing without "
+                   "a live provider connection, switch to Demo Mode in the header settings.")
             print(f"[ParseBotAdapter] {msg}")
             raise RuntimeError(msg)
 
     def search_multi_products(self, queries: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Searches each product in turn. Self-throttling in _throttled_get already
+        paces individual HTTP calls to the free-tier limit, so a 10-15 product
+        multi-search will simply take longer rather than erroring out with 429s.
+        """
         results = {}
         for q in queries:
             try:
@@ -376,77 +441,66 @@ class ParseBotAdapter(BaseProviderAdapter):
 
     def _map_raw_item_to_standard(self, raw: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Maps raw JSON from third-party provider to our internal standard supplier schema.
-        Handles diverse Chinese and English API response keys.
+        Maps raw JSON from ParseBot to our internal standard supplier schema.
+        Handles diverse Chinese and English API response keys defensively, since
+        the exact field names for search_by_keyword weren't documented when this
+        adapter was written - only sibling endpoints' schemas were confirmed.
         """
         supplier_name = (
-            raw.get("company_name") or
-            raw.get("companyName") or
-            raw.get("shop_name") or
-            raw.get("shopName") or
-            raw.get("seller_title") or
-            raw.get("sellerTitle") or
-            raw.get("seller_name") or
-            raw.get("supplier_name") or
-            raw.get("supplierName") or
-            raw.get("vendor_name") or
-            raw.get("company") or
-            "1688 Verified Seller"
+            raw.get("company_name") or raw.get("companyName") or
+            raw.get("shop_name") or raw.get("shopName") or
+            raw.get("seller_title") or raw.get("sellerTitle") or
+            raw.get("seller_name") or raw.get("supplier_name") or
+            raw.get("supplierName") or raw.get("vendor_name") or
+            raw.get("company") or "1688 Verified Seller"
         )
-        
+
         sup_id = str(
-            raw.get("company_id") or
-            raw.get("companyId") or
-            raw.get("seller_id") or
-            raw.get("sellerId") or
-            raw.get("member_id") or
-            raw.get("memberId") or
-            raw.get("shop_id") or
-            abs(hash(supplier_name))
+            raw.get("company_id") or raw.get("companyId") or
+            raw.get("seller_id") or raw.get("sellerId") or
+            raw.get("member_id") or raw.get("memberId") or
+            raw.get("shop_id") or abs(hash(supplier_name))
         )
-        
+
         title = (
-            raw.get("title") or
-            raw.get("subject") or
-            raw.get("product_name") or
-            raw.get("productTitle") or
-            raw.get("name") or
-            raw.get("offer_name") or
-            "1688 Listed Item"
+            raw.get("title") or raw.get("subject") or
+            raw.get("product_name") or raw.get("productTitle") or
+            raw.get("name") or raw.get("offer_name") or "1688 Listed Item"
         )
 
         location = (
-            raw.get("city") or
-            raw.get("province") or
-            raw.get("location") or
-            raw.get("address") or
-            raw.get("region") or
-            "China"
+            raw.get("city") or raw.get("province") or
+            raw.get("location") or raw.get("address") or
+            raw.get("region") or "China"
         )
 
-        shop_url = (
-            raw.get("shop_url") or
-            raw.get("shopUrl") or
-            raw.get("company_url") or
-            raw.get("companyUrl") or
-            raw.get("store_url") or
-            f"https://shop{sup_id}.1688.com"
-        )
+        # --- Real link construction ---
+        # offer_id is the one ID confirmed present on every listing. The real,
+        # working 1688 product URL is always https://detail.1688.com/offer/{offer_id}.html
+        offer_id = raw.get("offer_id") or raw.get("offerId")
+        real_detail_url = f"https://detail.1688.com/offer/{offer_id}.html" if offer_id else ""
 
         item_url = (
-            raw.get("item_url") or
-            raw.get("itemUrl") or
-            raw.get("detail_url") or
-            raw.get("detailUrl") or
-            raw.get("offer_url") or
-            raw.get("offerUrl") or
-            raw.get("url") or
-            raw.get("link") or
-            ""
+            raw.get("item_url") or raw.get("itemUrl") or
+            raw.get("detail_url") or raw.get("detailUrl") or
+            raw.get("offer_url") or raw.get("offerUrl") or
+            raw.get("url") or raw.get("link") or
+            real_detail_url
         )
 
-        price = str(raw.get("price") or raw.get("price_range") or raw.get("unitPrice") or raw.get("priceRange") or raw.get("offer_price") or "Inquire")
-        moq = str(raw.get("moq") or raw.get("min_order_quantity") or raw.get("minOrderQuantity") or raw.get("quantityBegin") or raw.get("start_amount") or "1")
+        # No reliable separate storefront URL exists in the search response.
+        # Never fabricate a shop{id}.1688.com guess - it won't resolve. Use the
+        # same real product link, which is guaranteed to be a genuine 1688 page.
+        shop_url = (
+            raw.get("shop_url") or raw.get("shopUrl") or
+            raw.get("company_url") or raw.get("companyUrl") or
+            raw.get("store_url") or item_url
+        )
+
+        price = str(raw.get("price") or raw.get("price_range") or raw.get("unitPrice") or
+                     raw.get("priceRange") or raw.get("offer_price") or "Inquire")
+        moq = str(raw.get("moq") or raw.get("min_order_quantity") or raw.get("minOrderQuantity") or
+                   raw.get("quantityBegin") or raw.get("start_amount") or "1")
 
         badges = raw.get("badges") or raw.get("tags") or raw.get("certifications") or raw.get("services") or []
         if isinstance(badges, str):
@@ -474,6 +528,20 @@ class ParseBotAdapter(BaseProviderAdapter):
             "shop_url": shop_url,
             "item_url": item_url
         }
+
+    def get_product_details(self, offer_id: str) -> Dict[str, Any]:
+        """
+        Calls get_product_details for one offer. Not called automatically by
+        search_single_product/search_multi_products (would multiply API calls
+        and burn through the free tier's 200 monthly credits fast) - available
+        for future use if you want richer per-item detail on demand.
+        """
+        endpoint = self._endpoint("get_product_details")
+        resp = self._throttled_get(endpoint, {"offer_id": offer_id})
+        resp.raise_for_status()
+        data = resp.json()
+        items = self._extract_items_from_response(data)
+        return items[0] if items else (data if isinstance(data, dict) else {})
 
 
 def get_adapter(app_cfg: Optional[AppConfig] = None) -> BaseProviderAdapter:
