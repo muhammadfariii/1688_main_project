@@ -3,5 +3,5 @@
   "provider_api_key": "apify_api_K3TVKLqXvPRZgEk5VJQoaBfJnvOV581Y7Bg2",
   "actor_id": "schnellscrapers/1688-supplier-leads",
   "provider_base_url": "https://api.apify.com/v2",
-  "demo_mode": true
+  "demo_mode": false
 }
