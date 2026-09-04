@@ -42,10 +42,11 @@ outputType = "webview"
 [userenv]
 
 [userenv.shared]
-provider_base_url = "https://api.parse.bot/scraper/bce3cd9b-591a-4e87-a406-6e57ab0dd092"
-provider_name = "parsebot"
-provider_api_key = "pmx_47744145266284952786bd82187618de"
+provider_base_url = "https://api.apify.com/v2"
+provider_name = "apify"
+provider_api_key = "apify_api_K3TVKLqXvPRZgEk5VJQoaBfJnvOV581Y7Bg2"
 demo_mode = "false"
+actor_id = "schnellscrapers/1688-supplier-leads"
 
 [userenv.production]
 
