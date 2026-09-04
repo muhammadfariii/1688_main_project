@@ -2,6 +2,7 @@
 Supplier Classifier for 1688 Sourcing Tool.
 Uses a multi-factor heuristic signal engine to classify suppliers as
 'Factory', 'Trading Company', or 'Uncertain' with confidence scoring.
+Integrates with Apify 1688 Supplier Leads verified platform signals.
 """
 
 import re
@@ -33,9 +34,10 @@ class SupplierClassification:
 class HeuristicSupplierClassifier:
     """
     Heuristic classifier based on company name patterns, business scope,
-    audit badges, facility size, registered capital, and operational metrics.
+    audit badges, facility size, registered capital, verified platform signals, and operational metrics.
     """
 
+    # Chinese and English Strong Factory Keywords
     FACTORY_NAME_KEYWORDS = [
         "制造", "生产", "工厂", "实业", "制品", "机械", "五金", "电子", 
         "塑胶", "模具", "制衣", "包装", "纺织", "印染", "科技实业", "五金塑胶",
@@ -44,6 +46,7 @@ class HeuristicSupplierClassifier:
         "plastics", "mould", "molding", "garment", "textile", "works", "mills"
     ]
 
+    # Strong Trading / Reseller Keywords
     TRADING_NAME_KEYWORDS = [
         "贸易", "进出口", "商行", "百货", "商贸", "商务", "供应链", 
         "电子商务", "销售", "批发", "商社", "经贸",
@@ -51,16 +54,19 @@ class HeuristicSupplierClassifier:
         "supply chain", "e-commerce", "wholesaler", "distributor", "agency", "store"
     ]
 
+    # Business scope positive signals
     FACTORY_SCOPE_KEYWORDS = [
         "生产", "加工", "制造", "定制", "开模", "组装", "研发生产", "设计制造",
         "production", "processing", "fabrication", "assembly", "oem", "odm", "customization"
     ]
 
+    # Business scope negative signals
     TRADING_SCOPE_KEYWORDS = [
         "批发", "零售", "转口", "代理", "销售代理", "代销",
         "wholesale", "retail", "brokerage", "distribution"
     ]
 
+    # Audit & Verification Badges
     FACTORY_BADGES = [
         "超级工厂", "源头工厂", "深度验厂", "实力商家", "SGS认证", "TUV认证", "BV认证",
         "super factory", "source factory", "verified factory", "deep audited factory",
@@ -88,6 +94,27 @@ class HeuristicSupplierClassifier:
         scope_lower = scope.lower()
         desc_lower = desc.lower()
 
+        # 0. Verified 1688 Platform Signals (e.g. from Apify 1688 Supplier Leads)
+        if supplier_data.get("is_super_factory") or "超级工厂" in badges_str:
+            score += 35
+            signals.append("Verified 1688 Super Factory (超级工厂) audit (+35)")
+        elif supplier_data.get("is_factory_inspected") or "深度验厂" in badges_str:
+            score += 30
+            signals.append("Verified 1688 Factory Inspected (深度验厂) audit (+30)")
+        elif any(badge.lower() in badges_str for badge in self.FACTORY_BADGES):
+            score += 25
+            signals.append("Verified platform manufacturing badge/audit (+25)")
+
+        # Business Role (Apify field: e.g. '生产加工' vs '经销批发')
+        role = str(supplier_data.get("business_role") or "").strip()
+        if role:
+            if "生产" in role or "加工" in role:
+                score += 30
+                signals.append(f"Verified 1688 business role: '{role}' (Production/Processing) (+30)")
+            elif "批发" in role or "经销" in role or "商贸" in role:
+                score -= 30
+                signals.append(f"Verified 1688 business role: '{role}' (Wholesale/Trading) (-30)")
+
         # 1. Evaluate Company Name
         has_factory_name = False
         for kw in self.FACTORY_NAME_KEYWORDS:
@@ -105,25 +132,22 @@ class HeuristicSupplierClassifier:
                 has_trading_name = True
                 break
 
-        # 2. Evaluate Badges & Certifications
-        for badge in self.FACTORY_BADGES:
-            if badge.lower() in badges_str:
-                score += 25
-                signals.append(f"Verified platform badge/audit: '{badge}' (+25)")
-                break
+        # Edge case: Both present (e.g., "XX Manufacturing and Trading Co.")
+        if has_factory_name and has_trading_name:
+            signals.append("Hybrid name containing both manufacturing and trading terms")
 
-        # 3. Evaluate Business Scope
+        # 2. Evaluate Business Scope
         scope_factory_hits = [kw for kw in self.FACTORY_SCOPE_KEYWORDS if kw.lower() in scope_lower or kw.lower() in desc_lower]
         if scope_factory_hits:
             score += 20
-            signals.append(f"Business scope includes manufacturing: {', '.join(scope_factory_hits[:2])} (+20)")
+            signals.append(f"Business scope includes manufacturing activities: {', '.join(scope_factory_hits[:2])} (+20)")
 
         scope_trading_hits = [kw for kw in self.TRADING_SCOPE_KEYWORDS if kw.lower() in scope_lower or kw.lower() in desc_lower]
         if scope_trading_hits and not scope_factory_hits:
             score -= 20
             signals.append("Business scope primarily lists trading/reselling (-20)")
 
-        # 4. Evaluate Physical Plant Scale
+        # 3. Evaluate Physical Plant & Scale
         try:
             area_num = float(area_sqm)
             if area_num >= 5000:
@@ -132,13 +156,13 @@ class HeuristicSupplierClassifier:
             elif area_num >= 1000:
                 score += 10
                 signals.append(f"Dedicated workshop/plant space ({int(area_num):,} m²) (+10)")
-            elif 0 < area_num < 200:
+            elif area_num > 0 and area_num < 200:
                 score -= 10
-                signals.append(f"Minimal office space footprint ({int(area_num)} m²) (-10)")
+                signals.append(f"Minimal office-only space footprint ({int(area_num)} m²) (-10)")
         except (ValueError, TypeError):
             pass
 
-        # 5. Evaluate Workforce / Employees
+        # 4. Evaluate Workforce / Employees
         try:
             staff_num = int(staff_count)
             if staff_num >= 50:
@@ -147,19 +171,19 @@ class HeuristicSupplierClassifier:
             elif staff_num >= 20:
                 score += 8
                 signals.append(f"Active staff scale ({staff_num} personnel) (+8)")
-            elif 0 < staff_num <= 5:
+            elif staff_num > 0 and staff_num <= 5:
                 score -= 10
-                signals.append(f"Small micro-enterprise staff ({staff_num}) (-10)")
+                signals.append(f"Very small micro-enterprise staff ({staff_num}) (-10)")
         except (ValueError, TypeError):
             pass
 
-        # 6. Registered Capital & Longevity
+        # 5. Registered Capital & Longevity
         try:
             cap_num = float(capital_rmb_k)
-            if cap_num >= 5000:
+            if cap_num >= 5000:  # 5 Million RMB+
                 score += 10
                 signals.append(f"High registered capital (¥{int(cap_num):,}k RMB) (+10)")
-            elif cap_num >= 1000:
+            elif cap_num >= 1000:  # 1 Million RMB+
                 score += 5
                 signals.append("Registered capital >= ¥1M RMB (+5)")
         except (ValueError, TypeError):
@@ -192,4 +216,5 @@ class HeuristicSupplierClassifier:
             }
         )
 
+# Global classifier instance
 classifier = HeuristicSupplierClassifier()

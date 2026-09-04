@@ -50,11 +50,13 @@
     header {
       background: white;
       border-bottom: 1px solid var(--slate-200);
-      padding: 1rem 2rem;
+      padding: 0.85rem 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      position: relative;
+      gap: 1rem;
     }
 
     .brand {
@@ -71,6 +73,7 @@
       padding: 0.35rem 0.65rem;
       border-radius: 6px;
       letter-spacing: 0.5px;
+      box-shadow: 0 2px 4px rgba(255, 96, 0, 0.2);
     }
 
     .brand-title h1 {
@@ -90,23 +93,112 @@
       gap: 0.75rem;
     }
 
-    .badge-mode {
+    /* Top Mode Toggle Button */
+    .mode-toggle-card {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      padding: 0.35rem 0.8rem;
-      border-radius: 9999px;
-      background: #eff6ff;
-      color: #1d4ed8;
-      border: 1px solid #bfdbfe;
+      gap: 0.65rem;
+      padding: 0.4rem 0.85rem;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid var(--slate-300);
+      background: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      outline: none;
     }
 
-    .badge-mode.live {
+    .mode-toggle-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+    }
+
+    .mode-toggle-card:active {
+      transform: translateY(0);
+    }
+
+    /* Demo Mode State */
+    .mode-toggle-card.demo {
+      background: #fffbeb;
+      border-color: #fde68a;
+      color: #b45309;
+    }
+
+    .mode-toggle-card.demo .toggle-pill {
+      background: #f59e0b;
+    }
+
+    .mode-toggle-card.demo .toggle-knob {
+      transform: translateX(0);
+    }
+
+    .mode-toggle-card.demo .status-dot {
+      background: #d97706;
+    }
+
+    /* Live Mode State */
+    .mode-toggle-card.live {
       background: #ecfdf5;
-      color: #047857;
       border-color: #a7f3d0;
+      color: #047857;
+    }
+
+    .mode-toggle-card.live .toggle-pill {
+      background: #10b981;
+    }
+
+    .mode-toggle-card.live .toggle-knob {
+      transform: translateX(16px);
+    }
+
+    .mode-toggle-card.live .status-dot {
+      background: #10b981;
+    }
+
+    /* Toggle Switch Track and Knob */
+    .toggle-pill {
+      width: 36px;
+      height: 20px;
+      border-radius: 9999px;
+      background: #cbd5e1;
+      position: relative;
+      transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      flex-shrink: 0;
+    }
+
+    .toggle-knob {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: white;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+    }
+
+    .mode-info {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
+
+    .mode-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 700;
+      font-size: 0.825rem;
+      line-height: 1.2;
+    }
+
+    .mode-desc {
+      font-size: 0.7rem;
+      color: var(--slate-600);
+      font-weight: 500;
+      line-height: 1.2;
     }
 
     .status-dot {
@@ -115,16 +207,150 @@
       border-radius: 50%;
       background: #2563eb;
       animation: pulse 2s infinite;
-    }
-
-    .badge-mode.live .status-dot {
-      background: #10b981;
+      flex-shrink: 0;
     }
 
     @keyframes pulse {
       0% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(1.1); }
+      50% { opacity: 0.5; transform: scale(1.15); }
       100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Config / Diagnostics Button */
+    .btn-config-icon {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.45rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--slate-200);
+      background: white;
+      color: var(--slate-600);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .btn-config-icon:hover {
+      background: var(--slate-50);
+      color: var(--slate-900);
+      border-color: var(--slate-300);
+    }
+
+    /* Toast Notification Popup */
+    .toast-popup {
+      position: fixed;
+      top: 1.25rem;
+      right: 1.5rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      z-index: 9999;
+      transform: translateY(-20px);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .toast-popup.show {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .toast-popup.success {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .toast-popup.info {
+      background: #eff6ff;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+    }
+
+    .toast-popup.warning {
+      background: #fffbeb;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    /* Diagnostics Modal / Popup */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      max-width: 520px;
+      width: 90%;
+      padding: 1.75rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      position: relative;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid var(--slate-200);
+      padding-bottom: 0.75rem;
+    }
+
+    .modal-header h3 {
+      font-size: 1.15rem;
+      color: var(--slate-900);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: var(--slate-600);
+      cursor: pointer;
+    }
+
+    .diag-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--slate-100);
+      font-size: 0.875rem;
+    }
+
+    .diag-label {
+      color: var(--slate-600);
+      font-weight: 500;
+    }
+
+    .diag-val {
+      font-weight: 600;
+      color: var(--slate-800);
+      text-align: right;
+    }
+
+    .diag-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1.25rem;
     }
 
     /* Main Container */
@@ -178,15 +404,15 @@
       border-radius: 10px;
       border: 1px solid var(--slate-200);
       padding: 1.5rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
       margin-bottom: 1.5rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }
 
     .card-title {
       font-size: 1.1rem;
       font-weight: 700;
       color: var(--slate-900);
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.25rem;
     }
 
     .card-desc {
@@ -195,14 +421,14 @@
       margin-bottom: 1.25rem;
     }
 
-    /* Forms */
+    /* Inputs */
     .form-group {
-      margin-bottom: 1.25rem;
+      margin-bottom: 1rem;
     }
 
     label {
       display: block;
-      font-size: 0.875rem;
+      font-size: 0.85rem;
       font-weight: 600;
       color: var(--slate-700);
       margin-bottom: 0.4rem;
@@ -210,85 +436,55 @@
 
     .input-text, .input-textarea {
       width: 100%;
-      padding: 0.75rem 1rem;
       border: 1px solid var(--slate-300);
       border-radius: 6px;
+      padding: 0.65rem 0.85rem;
       font-size: 0.95rem;
-      outline: none;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      color: var(--slate-800);
+      transition: border-color 0.15s;
     }
 
     .input-text:focus, .input-textarea:focus {
+      outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
     }
 
     .input-textarea {
       min-height: 140px;
-      resize: vertical;
       font-family: inherit;
-    }
-
-    .quick-chips {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.5rem;
-      margin-top: 0.6rem;
-    }
-
-    .chip-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--slate-600);
-    }
-
-    .chip-btn {
-      background: var(--slate-100);
-      border: 1px solid var(--slate-200);
-      border-radius: 9999px;
-      padding: 0.25rem 0.65rem;
-      font-size: 0.75rem;
-      color: var(--slate-700);
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .chip-btn:hover {
-      background: var(--primary-light);
-      border-color: #93c5fd;
-      color: var(--primary);
+      resize: vertical;
+      line-height: 1.4;
     }
 
     .form-actions {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 1rem;
-      margin-top: 1rem;
+      align-items: center;
+      margin-top: 1.25rem;
     }
 
     .btn-primary {
-      background: var(--primary);
+      background-color: var(--primary);
       color: white;
       border: none;
-      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      padding: 0.7rem 1.4rem;
       font-size: 0.95rem;
       font-weight: 600;
-      border-radius: 6px;
       cursor: pointer;
+      transition: background-color 0.15s;
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      transition: background 0.15s ease;
     }
 
     .btn-primary:hover {
-      background: var(--primary-hover);
+      background-color: var(--primary-hover);
     }
 
     .btn-primary:disabled {
-      background: var(--slate-300);
+      opacity: 0.6;
       cursor: not-allowed;
     }
 
@@ -296,15 +492,15 @@
       background: white;
       color: var(--slate-700);
       border: 1px solid var(--slate-300);
-      padding: 0.5rem 0.9rem;
+      border-radius: 6px;
+      padding: 0.55rem 1rem;
       font-size: 0.85rem;
       font-weight: 600;
-      border-radius: 6px;
       cursor: pointer;
+      transition: all 0.15s;
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
-      transition: all 0.15s ease;
     }
 
     .btn-secondary:hover {
@@ -313,23 +509,64 @@
     }
 
     .btn-excel {
-      background: #ecfdf5;
-      color: #065f46;
+      color: #047857;
       border-color: #a7f3d0;
+      background: #ecfdf5;
     }
-
     .btn-excel:hover {
       background: #d1fae5;
     }
 
     .btn-csv {
-      background: #f8fafc;
-      color: #334155;
-      border-color: #cbd5e1;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+      background: #eff6ff;
+    }
+    .btn-csv:hover {
+      background: #dbeafe;
     }
 
-    .btn-csv:hover {
-      background: #f1f5f9;
+    .quick-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      align-items: center;
+    }
+
+    .chip-label {
+      font-size: 0.75rem;
+      color: var(--slate-600);
+      font-weight: 600;
+    }
+
+    .chip-btn {
+      background: var(--slate-100);
+      border: 1px solid var(--slate-200);
+      border-radius: 9999px;
+      padding: 0.2rem 0.65rem;
+      font-size: 0.75rem;
+      color: var(--slate-700);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .chip-btn:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: #bfdbfe;
+    }
+
+    /* Filter Checkbox */
+    .checkbox-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--slate-700);
+      cursor: pointer;
+      user-select: none;
     }
 
     /* Results Header & Summary */
@@ -337,28 +574,53 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
       margin-bottom: 1rem;
       padding-bottom: 0.75rem;
       border-bottom: 1px solid var(--slate-200);
+      flex-wrap: wrap;
+      gap: 0.75rem;
     }
 
     .results-summary {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
       font-size: 0.95rem;
       font-weight: 600;
       color: var(--slate-800);
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
     }
 
-    .pill-count {
+    .source-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .source-badge.live {
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+
+    .source-badge.demo {
+      background: #fef3c7;
+      color: #b45309;
+      border: 1px solid #fde68a;
+    }
+
+    .results-count-pill {
       background: var(--slate-100);
+      color: var(--slate-700);
       padding: 0.2rem 0.6rem;
       border-radius: 9999px;
       font-size: 0.8rem;
-      color: var(--slate-700);
+      font-weight: 600;
     }
 
     .export-group {
@@ -366,11 +628,11 @@
       gap: 0.5rem;
     }
 
-    /* Tables */
+    /* Data Table */
     .table-container {
       overflow-x: auto;
-      border-radius: 8px;
       border: 1px solid var(--slate-200);
+      border-radius: 8px;
       background: white;
     }
 
@@ -382,9 +644,9 @@
     }
 
     th {
-      background: var(--slate-100);
+      background: var(--slate-50);
       color: var(--slate-700);
-      font-weight: 700;
+      font-weight: 600;
       padding: 0.75rem 1rem;
       border-bottom: 1px solid var(--slate-200);
       white-space: nowrap;
@@ -394,6 +656,7 @@
       padding: 0.85rem 1rem;
       border-bottom: 1px solid var(--slate-200);
       vertical-align: top;
+      color: var(--slate-800);
     }
 
     tr:last-child td {
@@ -401,62 +664,16 @@
     }
 
     tr:hover td {
-      background: #f8fafc;
+      background-color: #fafbfc;
     }
 
-    /* Supplier Cell Components */
-    .supplier-name-cell {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      min-width: 240px;
-    }
-
-    .supplier-title {
-      font-weight: 700;
-      color: var(--slate-900);
-      text-decoration: none;
-    }
-
-    .supplier-title:hover {
-      color: var(--primary);
-      text-decoration: underline;
-    }
-
-    .supplier-cn {
-      font-size: 0.8rem;
-      color: var(--slate-600);
-    }
-
-    .supplier-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.3rem;
-      margin-top: 0.2rem;
-    }
-
-    .badge-tag {
-      font-size: 0.7rem;
-      font-weight: 600;
-      padding: 0.15rem 0.45rem;
-      border-radius: 4px;
-      background: var(--slate-100);
-      color: var(--slate-700);
-      border: 1px solid var(--slate-200);
-    }
-
-    .badge-super {
-      background: #fef3c7;
-      color: #92400e;
-      border-color: #fde68a;
-    }
-
+    /* Badges & Tags */
     .badge-type {
       display: inline-block;
-      font-size: 0.75rem;
-      font-weight: 700;
       padding: 0.25rem 0.6rem;
       border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
       text-align: center;
       white-space: nowrap;
     }
@@ -479,18 +696,64 @@
       border: 1px solid var(--uncertain-border);
     }
 
+    .supplier-name-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .supplier-title {
+      font-weight: 700;
+      color: var(--slate-900);
+      text-decoration: none;
+    }
+
+    .supplier-title:hover {
+      color: var(--primary);
+      text-decoration: underline;
+    }
+
+    .supplier-cn {
+      font-size: 0.8rem;
+      color: var(--slate-600);
+    }
+
+    .supplier-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-top: 0.25rem;
+    }
+
+    .badge-tag {
+      background: var(--slate-100);
+      color: var(--slate-700);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+
+    .badge-super {
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+      font-weight: 600;
+    }
+
     .confidence-meter {
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.5rem;
     }
 
     .progress-bar-bg {
-      width: 60px;
-      height: 7px;
+      flex: 1;
+      height: 6px;
       background: var(--slate-200);
       border-radius: 9999px;
       overflow: hidden;
+      min-width: 60px;
     }
 
     .progress-bar-fill {
@@ -511,29 +774,24 @@
       display: flex;
       flex-wrap: wrap;
       gap: 0.35rem;
-      max-width: 320px;
     }
 
     .tag-pill {
-      font-size: 0.75rem;
-      background: var(--slate-100);
-      color: var(--slate-700);
-      padding: 0.2rem 0.5rem;
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
       border-radius: 4px;
-      border: 1px solid var(--slate-200);
+      font-size: 0.75rem;
+      font-weight: 500;
     }
 
     .tag-pill.covered {
-      background: #ecfdf5;
-      color: #065f46;
-      border-color: #a7f3d0;
-      font-weight: 600;
+      background: #dcfce7;
+      color: #15803d;
     }
 
     .tag-pill.missing {
-      background: #f8fafc;
+      background: #f1f5f9;
       color: #94a3b8;
-      border-color: #e2e8f0;
       text-decoration: line-through;
     }
 
@@ -545,25 +803,18 @@
       font-weight: 600;
       cursor: pointer;
       padding: 0;
-      margin-top: 0.25rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.2rem;
-    }
-
-    .signal-details-btn:hover {
-      text-decoration: underline;
+      margin-top: 0.35rem;
     }
 
     .signals-box {
-      margin-top: 0.4rem;
-      font-size: 0.75rem;
-      background: var(--slate-50);
-      padding: 0.5rem;
-      border-radius: 6px;
-      border: 1px solid var(--slate-200);
-      color: var(--slate-700);
       display: none;
+      margin-top: 0.4rem;
+      padding: 0.5rem;
+      background: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      border-radius: 4px;
+      font-size: 0.725rem;
+      color: var(--slate-600);
     }
 
     .signals-box.open {
@@ -574,33 +825,55 @@
       margin-left: 1rem;
     }
 
-    /* State banners */
+    /* Error Notification Banner */
+    .error-banner {
+      display: none;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      color: #991b1b;
+      position: relative;
+    }
+
+    .error-banner-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .error-banner-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .error-banner-msg {
+      font-size: 0.85rem;
+      color: #b91c1c;
+      line-height: 1.4;
+    }
+
+    .error-banner-actions {
+      margin-top: 0.75rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* Empty state */
     .empty-state {
-      padding: 3rem 1.5rem;
       text-align: center;
+      padding: 3.5rem 1.5rem;
       color: var(--slate-600);
     }
 
     .empty-state svg {
       width: 48px;
       height: 48px;
-      stroke: var(--slate-400);
+      color: var(--slate-300);
       margin-bottom: 0.75rem;
-    }
-
-    .spinner {
-      border: 3px solid rgba(255,255,255,0.3);
-      border-radius: 50%;
-      border-top: 3px solid white;
-      width: 16px;
-      height: 16px;
-      animation: spin 0.8s linear infinite;
-      display: inline-block;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
     }
 
     /* Footer */
@@ -608,14 +881,134 @@
       background: white;
       border-top: 1px solid var(--slate-200);
       padding: 1.25rem 2rem;
+      text-align: center;
       font-size: 0.8rem;
       color: var(--slate-600);
-      text-align: center;
       margin-top: auto;
     }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem;
+      }
+      .header-status {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+  
+    /* Enhanced Product Links & Contact Styles */
+    .product-direct-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-weight: 700;
+      font-size: 0.875rem;
+      color: var(--primary);
+      text-decoration: none;
+      line-height: 1.35;
+      padding: 0.15rem 0;
+      transition: color 0.15s ease;
+    }
+    .product-direct-link:hover {
+      color: var(--primary-dark);
+      text-decoration: underline;
+    }
+
+    .tag-clickable {
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      transition: all 0.15s ease;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+    .tag-clickable:hover {
+      background: #bbf7d0;
+      color: #065f46;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    }
+
+    .contact-box {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-width: 170px;
+    }
+    .contact-actions-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      margin-top: 0.25rem;
+    }
+    .btn-contact-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 0.35rem;
+      padding: 0.28rem 0.6rem;
+      font-size: 0.725rem;
+      font-weight: 600;
+      border-radius: 5px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .btn-contact-page {
+      background: #ecfdf5;
+      color: #065f46;
+      border-color: #a7f3d0;
+    }
+    .btn-contact-page:hover {
+      background: #d1fae5;
+      color: #047857;
+    }
+    .btn-chat {
+      background: #eff6ff;
+      color: #1e40af;
+      border-color: #bfdbfe;
+    }
+    .btn-chat:hover {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+    .btn-shop {
+      background: #f8fafc;
+      color: #334155;
+      border-color: #cbd5e1;
+    }
+    .btn-shop:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
   </style>
 </head>
 <body>
+
+  <!-- Floating Toast Notification -->
+  <div id="toastNotification" class="toast-popup"></div>
 
   <!-- Header -->
   <header>
@@ -623,31 +1016,105 @@
       <div class="brand-logo">1688</div>
       <div class="brand-title">
         <h1>1688 Sourcing Tool</h1>
-        <p>Manufacturer classification, supplier coverage analysis & export</p>
+        <p>Heuristic Factory Identifier & Supplier Multi-Product Coverage Aggregator</p>
       </div>
     </div>
     <div class="header-status">
-      <div id="modeBadge" class="badge-mode">
-        <span class="status-dot"></span>
-        <span id="modeText">Checking Status...</span>
-      </div>
+      <!-- Mode Toggle Switch Button -->
+      <button type="button" class="mode-toggle-card demo" id="modeToggleBtn" onclick="toggleModeDirectly()" role="switch" aria-checked="true" title="Click to toggle between Demo Mode and Live Mode">
+        <div class="toggle-pill">
+          <div class="toggle-knob"></div>
+        </div>
+        <div class="mode-info">
+          <div class="mode-title-row">
+            <div class="status-dot"></div>
+            <span class="mode-name" id="modeName">Demo Mode</span>
+          </div>
+          <span class="mode-desc" id="modeDesc">Using Sample Data (Click to toggle)</span>
+        </div>
+      </button>
+
+      <!-- Config / Diagnostics Modal Trigger -->
+      <button type="button" class="btn-config-icon" onclick="openDiagModal()" title="API Configuration & Diagnostics">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <span>Config</span>
+      </button>
     </div>
   </header>
 
-  <!-- Main -->
+  <!-- Diagnostics Modal -->
+  <div class="modal-overlay" id="diagModal" onclick="closeDiagModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Provider & API Configuration</h3>
+        <button class="modal-close" onclick="closeDiagModal()">&times;</button>
+      </div>
+      <div class="diag-body">
+        <div class="diag-row">
+          <span class="diag-label">Operating Mode:</span>
+          <span class="diag-val" id="diagMode">-</span>
+        </div>
+        <div class="diag-row">
+          <span class="diag-label">Active Provider:</span>
+          <span class="diag-val" id="diagProvider">-</span>
+        </div>
+        <div class="diag-row">
+          <span class="diag-label">API Key Configured:</span>
+          <span class="diag-val" id="diagApiKey">-</span>
+        </div>
+        <div class="diag-row">
+          <span class="diag-label">Base URL:</span>
+          <span class="diag-val" id="diagBaseUrl">-</span>
+        </div>
+        <div class="diag-row" style="border-bottom: none; margin-top: 0.5rem;">
+          <span class="diag-label">Status Info:</span>
+          <span class="diag-val" id="diagReason" style="font-weight: normal; font-size: 0.8rem;">-</span>
+        </div>
+      </div>
+      <div id="testConnResult" style="margin-top: 0.75rem; font-size: 0.8rem; display: none; padding: 0.5rem; border-radius: 6px;"></div>
+      <div class="diag-actions">
+        <button type="button" class="btn-secondary" onclick="toggleModeFromDiag()" id="btnToggleMode" style="flex: 1;">
+          Toggle Mode
+        </button>
+        <button type="button" class="btn-secondary" onclick="testConnection()" id="btnTestConn" style="flex: 1;">
+          Test Connection
+        </button>
+        <button type="button" class="btn-primary" onclick="reloadConfig()" id="btnReloadConfig" style="flex: 1;">
+          Reload Config
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Application -->
   <main>
-    <!-- Navigation Tabs -->
+    <!-- Error Notification Banner -->
+    <div id="errorBanner" class="error-banner">
+      <div class="error-banner-content">
+        <div>
+          <div class="error-banner-title" id="errorBannerTitle">Connection Issue</div>
+          <div class="error-banner-msg" id="errorBannerMsg"></div>
+          <div class="error-banner-actions" id="errorBannerActions">
+            <button type="button" class="btn-primary" style="font-size: 0.8rem; padding: 0.4rem 0.85rem;" onclick="switchToDemoAndRetry()">
+              Switch to Demo Mode (Mock Data) & Retry
+            </button>
+          </div>
+        </div>
+        <button type="button" style="background: none; border: none; font-size: 1.25rem; color: #991b1b; cursor: pointer; line-height: 1;" onclick="hideErrorBanner()">&times;</button>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
     <div class="tabs-nav">
       <button class="tab-btn active" id="tabSingleBtn" onclick="switchTab('single')">
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-        </svg>
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         Single Product Search
       </button>
       <button class="tab-btn" id="tabMultiBtn" onclick="switchTab('multi')">
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-        </svg>
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
         Multiple Products (Coverage)
       </button>
     </div>
@@ -656,27 +1123,26 @@
     <div id="tabSingleContent">
       <div class="card">
         <div class="card-title">Single Product Factory Search</div>
-        <div class="card-desc">Enter a product name to search 1688 suppliers. The engine analyzes company data and heuristic signals to rank verified source factories first.</div>
-        
-        <form id="singleSearchForm" onsubmit="handleSingleSearch(event)">
+        <div class="card-desc">Enter a product name to search 1688 and identify verified direct factories versus commercial trading companies using heuristic signals.</div>
+
+        <form id=\"singleSearchForm\" onsubmit="handleSingleSearch(event)">
           <div class="form-group">
-            <label for="singleProductInput">Product Name / Keyword</label>
-            <input type="text" id="singleProductInput" class="input-text" placeholder="e.g., Stainless Steel Water Bottle, 1.3L Borosilicate Glass Jar, Silicone Spatula..." required autocomplete="off">
+            <label for="singleProductInput">Product Name / Keywords</label>
+            <input type="text" id="singleProductInput" class="input-text" placeholder="e.g. Stainless Steel Water Bottle, Borosilicate Glass Jar, Silicone Spatula" required>
             <div class="quick-chips">
-              <span class="chip-label">Quick test:</span>
+              <span class="chip-label">Quick samples:</span>
               <button type="button" class="chip-btn" onclick="setSingleProduct('Stainless Steel Water Bottle')">Stainless Steel Water Bottle</button>
-              <button type="button" class="chip-btn" onclick="setSingleProduct('1.3L Borosilicate Glass Jar')">1.3L Glass Jar</button>
-              <button type="button" class="chip-btn" onclick="setSingleProduct('Silicone Kitchen Spatula')">Silicone Spatula</button>
-              <button type="button" class="chip-btn" onclick="setSingleProduct('Wireless Fast Charger Stand')">Wireless Charger</button>
+              <button type="button" class="chip-btn" onclick="setSingleProduct('Ceramic Coffee Mug')">Ceramic Coffee Mug</button>
+              <button type="button" class="chip-btn" onclick="setSingleProduct('Silicone Kitchen Spatula')">Silicone Kitchen Spatula</button>
+              <button type="button" class="chip-btn" onclick="setSingleProduct('Borosilicate Glass Storage Jar')">Borosilicate Glass Jar</button>
             </div>
           </div>
 
           <div class="form-actions">
-            <div>
-              <label style="font-weight: normal; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem;">
-                <input type="checkbox" id="factoryOnlyCheckbox"> Factory only (hide trading companies)
-              </label>
-            </div>
+            <label class="checkbox-label">
+              <input type="checkbox" id="factoryOnlyCheckbox">
+              <span>Show Verified Factories Only</span>
+            </label>
             <button type="submit" class="btn-primary" id="btnSingleSearch">
               <span>Search Factories</span>
             </button>
@@ -690,7 +1156,8 @@
           <div class="results-header">
             <div class="results-summary">
               <span id="singleResultsCount">Found 0 suppliers</span>
-              <span id="singleFactoryPill" class="pill-count">0 Factories</span>
+              <span class="source-badge" id="singleSourceBadge">Demo Data</span>
+              <span class="results-count-pill" id="singleFactoryPill">0 Factories</span>
             </div>
             <div class="export-group">
               <button type="button" class="btn-secondary btn-excel" onclick="exportSingle('excel')">
@@ -712,8 +1179,8 @@
                   <th>Classification</th>
                   <th>Confidence</th>
                   <th>Plant & Scale</th>
-                  <th>Matched Product & Price</th>
-                  <th>Contact & Shop</th>
+                  <th>Matched Product & Offer Link</th>
+                  <th>Contact Information & Channels</th>
                 </tr>
               </thead>
               <tbody id="singleTableBody">
@@ -758,6 +1225,7 @@
           <div class="results-header">
             <div class="results-summary">
               <span id="multiResultsSummary">Analyzed 0 products across 0 suppliers</span>
+              <span class="source-badge" id="multiSourceBadge">Demo Data</span>
             </div>
             <div class="export-group">
               <button type="button" class="btn-secondary btn-excel" onclick="exportMulti('excel')">
@@ -780,8 +1248,8 @@
                   <th>Coverage %</th>
                   <th>Score</th>
                   <th>Classification</th>
-                  <th>Covered vs. Missing Catalog</th>
-                  <th>Contact & Link</th>
+                  <th>Covered Catalog & Offer Links</th>
+                  <th>Contact Information & Channels</th>
                 </tr>
               </thead>
               <tbody id="multiTableBody">
@@ -811,6 +1279,42 @@
   <script>
     let currentSingleData = null;
     let currentMultiData = null;
+    let currentStatusData = null;
+
+    // Toast Notification helper
+    function showToast(msg, type = 'info', duration = 3000) {
+      const toast = document.getElementById('toastNotification');
+      if (!toast) return;
+      toast.className = `toast-popup ${type} show`;
+      toast.innerText = msg;
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, duration);
+    }
+
+    // Render Status and Mode Switcher in UI
+    function renderStatusUI(data) {
+      const toggleBtn = document.getElementById('modeToggleBtn');
+      const modeName = document.getElementById('modeName');
+      const modeDesc = document.getElementById('modeDesc');
+
+      if (!toggleBtn || !modeName || !modeDesc) return;
+
+      if (data.demo_mode) {
+        toggleBtn.className = 'mode-toggle-card demo';
+        toggleBtn.setAttribute('aria-checked', 'true');
+        modeName.innerText = 'Demo Mode';
+        modeDesc.innerText = 'Realistic Mock Data (Click to toggle)';
+      } else {
+        toggleBtn.className = 'mode-toggle-card live';
+        toggleBtn.setAttribute('aria-checked', 'false');
+        const providerTitle = (data.configured_provider || data.provider_name || 'Live').toUpperCase();
+        modeName.innerText = `Live Mode (${providerTitle})`;
+        modeDesc.innerText = '1688 Scraper API (Click to toggle)';
+      }
+
+      updateDiagModal(data);
+    }
 
     // Load initial provider and mode status
     async function loadStatus() {
@@ -818,22 +1322,193 @@
         const resp = await fetch('/api/status');
         if (resp.ok) {
           const data = await resp.json();
-          const badge = document.getElementById('modeBadge');
-          const text = document.getElementById('modeText');
-          if (data.demo_mode) {
-            badge.className = 'badge-mode';
-            text.innerText = 'Demo Mode';
-          } else {
-            badge.className = 'badge-mode live';
-            text.innerText = 'Live Mode: ' + (data.provider_name || 'Connected');
-          }
+          currentStatusData = data;
+          renderStatusUI(data);
         }
       } catch (err) {
         console.warn('Could not fetch /api/status:', err);
       }
     }
 
+    // Direct toggle when clicking the top button
+    async function toggleModeDirectly() {
+      if (!currentStatusData) {
+        await loadStatus();
+        if (!currentStatusData) return;
+      }
+
+      const targetDemo = !currentStatusData.demo_mode;
+
+      // If user attempts to switch to live mode without API key
+      if (!targetDemo && !currentStatusData.has_api_key) {
+        showToast('Cannot switch to Live Mode: No API key configured. Please set PROVIDER_API_KEY.', 'warning', 4000);
+        return;
+      }
+
+      try {
+        const resp = await fetch('/api/config/toggle-mode', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ demo_mode: targetDemo })
+        });
+
+        const res = await resp.json();
+        if (resp.ok) {
+          currentStatusData = res.config;
+          renderStatusUI(res.config);
+          hideErrorBanner();
+          if (targetDemo) {
+            showToast('✓ Switched to Demo Mode (Realistic Mock Data)', 'warning', 3000);
+          } else {
+            const prov = (res.config.configured_provider || 'Apify').toUpperCase();
+            showToast(`✓ Switched to Live API Mode (${prov})`, 'success', 3000);
+          }
+        } else {
+          showToast(res.message || 'Could not switch mode', 'warning', 4000);
+        }
+      } catch (e) {
+        showToast('Error toggling mode: ' + e.message, 'warning', 4000);
+      }
+    }
+
+    function openDiagModal() {
+      document.getElementById('diagModal').style.display = 'flex';
+      if (currentStatusData) {
+        updateDiagModal(currentStatusData);
+      } else {
+        loadStatus();
+      }
+    }
+
+    function closeDiagModal(event) {
+      document.getElementById('diagModal').style.display = 'none';
+      document.getElementById('testConnResult').style.display = 'none';
+    }
+
+    function updateDiagModal(data) {
+      document.getElementById('diagMode').innerText = data.demo_mode ? 'Demo (Realistic Mock Data)' : 'Live API Mode';
+      document.getElementById('diagProvider').innerText = data.provider_name ? data.provider_name.toUpperCase() : 'Demo';
+      document.getElementById('diagApiKey').innerText = data.has_api_key ? (data.masked_api_key || 'Configured') : 'None (Set PROVIDER_API_KEY)';
+      document.getElementById('diagBaseUrl').innerText = data.base_url || 'N/A (Built-in Demo Generator)';
+      document.getElementById('diagReason').innerText = data.status_reason || '';
+      
+      const toggleBtn = document.getElementById('btnToggleMode');
+      if (toggleBtn) {
+        toggleBtn.innerText = data.demo_mode ? 'Switch to Live Mode' : 'Switch to Demo Mode';
+      }
+    }
+
+    async function toggleModeFromDiag() {
+      await toggleModeDirectly();
+      const resBox = document.getElementById('testConnResult');
+      if (resBox && currentStatusData) {
+        resBox.style.display = 'block';
+        resBox.style.background = currentStatusData.demo_mode ? '#fffbeb' : '#dcfce7';
+        resBox.style.color = currentStatusData.demo_mode ? '#b45309' : '#15803d';
+        resBox.innerText = currentStatusData.demo_mode ? 'Switched to Demo Mode (Mock Data)' : 'Switched to Live API Mode';
+      }
+    }
+
+    function showErrorBanner(msg, showDemoAction = true) {
+      const banner = document.getElementById('errorBanner');
+      const msgElem = document.getElementById('errorBannerMsg');
+      const actionsElem = document.getElementById('errorBannerActions');
+      
+      msgElem.innerText = msg;
+      actionsElem.style.display = showDemoAction ? 'flex' : 'none';
+      banner.style.display = 'block';
+      banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function hideErrorBanner() {
+      document.getElementById('errorBanner').style.display = 'none';
+    }
+
+    async function switchToDemoAndRetry() {
+      try {
+        const resp = await fetch('/api/config/toggle-mode', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ demo_mode: true })
+        });
+        if (resp.ok) {
+          const res = await resp.json();
+          currentStatusData = res.config;
+          renderStatusUI(res.config);
+          hideErrorBanner();
+          showToast('✓ Switched to Demo Mode (Mock Data)', 'warning', 2500);
+          
+          if (document.getElementById('tabSingleBtn').classList.contains('active')) {
+            const singleInput = document.getElementById('singleProductInput').value.trim();
+            if (singleInput) {
+              document.getElementById('singleSearchForm').dispatchEvent(new Event('submit'));
+            }
+          } else {
+            const multiInput = document.getElementById('multiProductsInput').value.trim();
+            if (multiInput) {
+              document.getElementById('multiSearchForm').dispatchEvent(new Event('submit'));
+            }
+          }
+        }
+      } catch (e) {
+        showToast('Could not switch to Demo Mode: ' + e.message, 'warning');
+      }
+    }
+
+    async function testConnection() {
+      const resBox = document.getElementById('testConnResult');
+      const btn = document.getElementById('btnTestConn');
+      const origText = btn.innerText;
+      btn.disabled = true;
+      btn.innerText = 'Testing...';
+      resBox.style.display = 'block';
+      resBox.style.background = '#f1f5f9';
+      resBox.style.color = '#334155';
+      resBox.innerText = 'Connecting to provider...';
+
+      try {
+        const resp = await fetch('/api/provider/test', { method: 'POST' });
+        const result = await resp.json();
+        if (result.success) {
+          resBox.style.background = '#dcfce7';
+          resBox.style.color = '#15803d';
+          resBox.innerText = '✓ ' + (result.message || 'Connection successful');
+        } else {
+          resBox.style.background = '#fee2e2';
+          resBox.style.color = '#991b1b';
+          resBox.innerText = '✕ ' + (result.error || 'Connection failed');
+        }
+      } catch (e) {
+        resBox.style.background = '#fee2e2';
+        resBox.style.color = '#991b1b';
+        resBox.innerText = '✕ Request error: ' + e.message;
+      } finally {
+        btn.disabled = false;
+        btn.innerText = origText;
+      }
+    }
+
+    async function reloadConfig() {
+      const btn = document.getElementById('btnReloadConfig');
+      const origText = btn.innerText;
+      btn.disabled = true;
+      btn.innerText = 'Reloading...';
+      try {
+        const resp = await fetch('/api/config/reload', { method: 'POST' });
+        if (resp.ok) {
+          await loadStatus();
+          showToast('Configuration reloaded successfully', 'info');
+        }
+      } catch (e) {
+        showToast('Failed to reload configuration: ' + e.message, 'warning');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = origText;
+      }
+    }
+
     function switchTab(tab) {
+      hideErrorBanner();
       const btnSingle = document.getElementById('tabSingleBtn');
       const btnMulti = document.getElementById('tabMultiBtn');
       const contentSingle = document.getElementById('tabSingleContent');
@@ -912,6 +1587,7 @@
     // Handle Single Product Search
     async function handleSingleSearch(event) {
       event.preventDefault();
+      hideErrorBanner();
       const product = document.getElementById('singleProductInput').value.trim();
       const factoryOnly = document.getElementById('factoryOnlyCheckbox').checked;
       if (!product) return;
@@ -930,7 +1606,8 @@
 
         if (!resp.ok) {
           const err = await resp.json();
-          alert('Search Error: ' + (err.detail || resp.statusText));
+          const detail = err.detail || resp.statusText;
+          showErrorBanner(detail, true);
           return;
         }
 
@@ -940,7 +1617,7 @@
         document.getElementById('welcomePlaceholder').style.display = 'none';
         document.getElementById('singleResultsContainer').style.display = 'block';
       } catch (err) {
-        alert('Network request failed: ' + err.message);
+        showErrorBanner('Network request failed: ' + err.message, false);
       } finally {
         btn.disabled = false;
         btn.innerHTML = origHtml;
@@ -954,10 +1631,19 @@
       document.getElementById('singleResultsCount').innerText = `Found ${data.total_count} suppliers for "${data.query}"`;
       document.getElementById('singleFactoryPill').innerText = `${data.factories_count} Factories, ${data.trading_count} Trading`;
 
+      // Set source badge
+      const sourceBadge = document.getElementById('singleSourceBadge');
+      if (data.data_source === 'live') {
+        sourceBadge.className = 'source-badge live';
+        sourceBadge.innerText = '🟢 Live 1688 API Data';
+      } else {
+        sourceBadge.className = 'source-badge demo';
+        sourceBadge.innerText = '🟡 Demo Mock Data';
+      }
+
       data.results.forEach((item, idx) => {
         const tr = document.createElement('tr');
 
-        // Type badge class
         let typeBadgeClass = 'badge-uncertain';
         let progressClass = '';
         if (item.classification === 'Factory') {
@@ -968,15 +1654,53 @@
           progressClass = 'trading';
         }
 
-        // Badges HTML
         const badgesHtml = (item.badges || []).map(b => {
           const isSuper = b.includes('超级') || b.includes('Super');
           return `<span class="badge-tag ${isSuper ? 'badge-super' : ''}">${b}</span>`;
         }).join(' ');
 
-        // Signals list HTML
         const signalsHtml = (item.signals || []).map(s => `<li>${s}</li>`).join('');
         const signalBoxId = `single-signal-${idx}`;
+
+        const offers = item.sample_offers || [];
+        const mainOfferUrl = item.item_url || (offers.length > 0 ? offers[0].url : '#');
+        const mobileOfferUrl = item.mobile_item_url || (offers.length > 0 ? offers[0].mobile_url : '');
+
+        let extraOffersHtml = '';
+        if (offers.length > 1) {
+          extraOffersHtml = `
+            <div style="font-size: 0.725rem; color: var(--slate-600); margin-top: 0.35rem; border-top: 1px dashed var(--slate-200); padding-top: 0.25rem;">
+              <span style="font-weight: 600; color: var(--slate-700);">Additional matched offers:</span>
+              ${offers.slice(1, 4).map(o => `
+                <div style="margin-top: 0.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px;">
+                  <a href="${o.url}" target="_blank" rel="noopener noreferrer" style="color: var(--primary); text-decoration: underline; font-weight: 500;" title="${o.title}">🔗 ${o.title} (${o.price}) ↗</a>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        const phoneDisplay = item.contact_phone ? `
+          <div style="font-size: 0.825rem; font-weight: 700; color: #0f172a; margin-bottom: 0.2rem;">
+            📞 <strong>Phone:</strong> <a href="tel:${item.contact_phone}" style="color: #0369a1; text-decoration: underline;">${item.contact_phone}</a>
+          </div>
+        ` : `
+          <div style="font-size: 0.75rem; color: #b45309; margin-bottom: 0.2rem; font-weight: 600;">
+            📞 <strong>Phone:</strong> Check Official 1688 Contact Page
+          </div>
+        `;
+
+        const personDisplay = item.contact_person ? `
+          <div style="font-size: 0.75rem; color: #334155; margin-bottom: 0.15rem;">
+            👤 <strong>Contact:</strong> ${item.contact_person}
+          </div>
+        ` : '';
+
+        const addressDisplay = (item.factory_address || item.location) ? `
+          <div style="font-size: 0.725rem; color: #64748b; margin-bottom: 0.35rem; line-height: 1.25;">
+            📍 <strong>Factory:</strong> ${item.factory_address || item.location}
+          </div>
+        ` : '';
 
         tr.innerHTML = `
           <td>
@@ -1011,15 +1735,35 @@
             </div>
           </td>
           <td>
-            <div style="font-size: 0.85rem; font-weight: 600; color: var(--slate-900); margin-bottom: 0.2rem;">
-              <a href="${item.item_url}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">${item.primary_product} ↗</a>
+            <div style="margin-bottom: 0.35rem;">
+              <a href="${mainOfferUrl}" target="_blank" rel="noopener noreferrer" class="product-direct-link" title="Open official desktop offer on 1688">
+                🛍️ ${item.primary_product} ↗
+              </a>
             </div>
-            <div style="font-size: 0.8rem; color: #b45309; font-weight: 600;">Price: ${item.price_range_rmb || 'Inquire'}</div>
-            <div style="font-size: 0.75rem; color: var(--slate-600);">MOQ: ${item.moq || '1 pc'}</div>
+            <div style="display: flex; gap: 0.4rem; align-items: center; margin-bottom: 0.3rem;">
+              <span style="font-size: 0.8rem; color: #b45309; font-weight: 700; background: #fef3c7; padding: 0.1rem 0.4rem; border-radius: 4px;">💰 ${item.price_range_rmb || 'Inquire'}</span>
+              <span style="font-size: 0.75rem; color: var(--slate-700); background: #f1f5f9; padding: 0.1rem 0.4rem; border-radius: 4px;">📦 MOQ: ${item.moq || '1 pc'}</span>
+              ${mobileOfferUrl ? `<a href="${mobileOfferUrl}" target="_blank" rel="noopener noreferrer" style="font-size: 0.7rem; color: #6366f1; text-decoration: underline;" title="Direct mobile link (bypasses desktop login prompt)">📱 Mobile View ↗</a>` : ''}
+            </div>
+            ${extraOffersHtml}
           </td>
           <td>
-            <div style="font-size: 0.75rem; color: var(--slate-600); margin-bottom: 0.35rem;">${item.contact_info || '1688 WangWang'}</div>
-            <a href="${item.shop_url}" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; text-decoration: none;">Open 1688 Shop ↗</a>
+            <div class="contact-box">
+              ${phoneDisplay}
+              ${personDisplay}
+              ${addressDisplay}
+              <div class="contact-actions-group">
+                <a href="${item.contact_page_url || (item.shop_url ? item.shop_url + 'page/contactinfo.htm' : '#')}" target="_blank" rel="noopener noreferrer" class="btn-contact-action btn-contact-page" title="Open verified 1688 contact page showing legal rep, phone and factory address">
+                  📋 Official 1688 Contact Page ↗
+                </a>
+                <a href="${item.chat_url || '#'}" target="_blank" rel="noopener noreferrer" class="btn-contact-action btn-chat" title="Chat directly with factory manager via 1688 AliWangWang Web IM">
+                  💬 AliWangWang Web Chat ↗
+                </a>
+                <a href="${item.shop_url}" target="_blank" rel="noopener noreferrer" class="btn-contact-action btn-shop" title="Open 1688 Store Homepage">
+                  🏪 1688 Store Homepage ↗
+                </a>
+              </div>
+            </div>
           </td>
         `;
         tbody.appendChild(tr);
@@ -1029,8 +1773,9 @@
     // Handle Multi Product Search
     async function handleMultiSearch(event) {
       event.preventDefault();
+      hideErrorBanner();
       const rawText = document.getElementById('multiProductsInput').value.trim();
-      const productLines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      const productLines = rawText.split('\n').map(s => s.trim()).filter(Boolean);
       if (productLines.length === 0) return;
 
       const btn = document.getElementById('btnMultiSearch');
@@ -1047,7 +1792,8 @@
 
         if (!resp.ok) {
           const err = await resp.json();
-          alert('Multi-search Error: ' + (err.detail || resp.statusText));
+          const detail = err.detail || resp.statusText;
+          showErrorBanner(detail, true);
           return;
         }
 
@@ -1057,7 +1803,7 @@
         document.getElementById('welcomePlaceholder').style.display = 'none';
         document.getElementById('multiResultsContainer').style.display = 'block';
       } catch (err) {
-        alert('Network request failed: ' + err.message);
+        showErrorBanner('Network request failed: ' + err.message, false);
       } finally {
         btn.disabled = false;
         btn.innerHTML = origHtml;
@@ -1068,24 +1814,64 @@
       const tbody = document.getElementById('multiTableBody');
       tbody.innerHTML = '';
 
-      document.getElementById('multiResultsSummary').innerText = `Analyzed ${data.total_queries} requested items across ${data.total_suppliers_found} suppliers`;
+      document.getElementById('multiResultsSummary').innerText = `Analyzed ${data.total_queries} product queries across ${data.total_suppliers_found} suppliers`;
+
+      const sourceBadge = document.getElementById('multiSourceBadge');
+      if (data.data_source === 'live') {
+        sourceBadge.className = 'source-badge live';
+        sourceBadge.innerText = '🟢 Live 1688 API Data';
+      } else {
+        sourceBadge.className = 'source-badge demo';
+        sourceBadge.innerText = '🟡 Demo Mock Data';
+      }
 
       data.results.forEach((item, idx) => {
         const tr = document.createElement('tr');
 
         let typeBadgeClass = 'badge-uncertain';
-        let progressClass = '';
         if (item.classification === 'Factory') {
           typeBadgeClass = 'badge-factory';
-          progressClass = 'factory';
         } else if (item.classification === 'Trading Company') {
           typeBadgeClass = 'badge-trading';
-          progressClass = 'trading';
         }
 
-        // Covered items tags
-        const coveredTags = (item.covered_products_list || []).map(p => `<span class="tag-pill covered">✓ ${p}</span>`).join(' ');
-        const missingTags = (item.missing_products_list || []).map(p => `<span class="tag-pill missing">✕ ${p}</span>`).join(' ');
+        const coveredPills = (item.covered_products_list || []).map(p => {
+          const offer = (item.sample_offers || []).find(o => o.query === p || (o.title && o.title.toLowerCase().includes(p.toLowerCase())));
+          const offUrl = offer ? (offer.url || offer.item_url) : item.item_url;
+          if (offUrl) {
+            return `<a href="${offUrl}" target="_blank" rel="noopener noreferrer" class="tag-pill covered tag-clickable" title="Open ${p} on 1688: ${offer ? offer.title : p}">✓ ${p} ↗</a>`;
+          }
+          return `<span class="tag-pill covered">✓ ${p}</span>`;
+        }).join(' ');
+
+        const missingPills = (item.missing_products_list || []).map(p => `<span class="tag-pill missing">✕ ${p}</span>`).join(' ');
+
+        const badgesHtml = (item.badges || []).map(b => {
+          const isSuper = b.includes('超级') || b.includes('Super');
+          return `<span class="badge-tag ${isSuper ? 'badge-super' : ''}">${b}</span>`;
+        }).join(' ');
+
+        const phoneDisplay = item.contact_phone ? `
+          <div style="font-size: 0.825rem; font-weight: 700; color: #0f172a; margin-bottom: 0.2rem;">
+            📞 <strong>Phone:</strong> <a href="tel:${item.contact_phone}" style="color: #0369a1; text-decoration: underline;">${item.contact_phone}</a>
+          </div>
+        ` : `
+          <div style="font-size: 0.75rem; color: #b45309; margin-bottom: 0.2rem; font-weight: 600;">
+            📞 <strong>Phone:</strong> Check Official 1688 Contact Page
+          </div>
+        `;
+
+        const personDisplay = item.contact_person ? `
+          <div style="font-size: 0.75rem; color: #334155; margin-bottom: 0.15rem;">
+            👤 <strong>Contact:</strong> ${item.contact_person}
+          </div>
+        ` : '';
+
+        const addressDisplay = (item.factory_address || item.location) ? `
+          <div style="font-size: 0.725rem; color: #64748b; margin-bottom: 0.35rem; line-height: 1.25;">
+            📍 <strong>Factory:</strong> ${item.factory_address || item.location}
+          </div>
+        ` : '';
 
         tr.innerHTML = `
           <td>
@@ -1093,84 +1879,123 @@
               <a href="${item.shop_url}" target="_blank" rel="noopener noreferrer" class="supplier-title">${item.company_name_en || item.supplier_name}</a>
               <div class="supplier-cn">${item.company_name_cn || ''}</div>
               <div style="font-size: 0.75rem; color: var(--slate-600);">📍 ${item.location || 'China'}</div>
+              <div class="supplier-badges">${badgesHtml}</div>
             </div>
           </td>
           <td>
-            <div style="font-weight: 700; font-size: 1.05rem; color: var(--slate-900);">
-              ${item.products_covered_count} <span style="font-size: 0.8rem; font-weight: normal; color: var(--slate-600);">/ ${data.total_queries} items</span>
+            <div style="font-weight: 700; font-size: 1.1rem; color: var(--slate-900);">
+              ${item.products_covered_count} / ${data.total_queries}
             </div>
+            <div style="font-size: 0.75rem; color: var(--slate-600);">items matched</div>
           </td>
           <td>
             <div class="confidence-meter">
-              <span style="font-weight: 700; font-size: 0.9rem;">${item.coverage_percent_str}</span>
+              <span style="font-weight: 700; font-size: 0.9rem;">${item.coverage_percent_str || (item.coverage_percent + '%')}</span>
               <div class="progress-bar-bg">
-                <div class="progress-bar-fill" style="width: ${item.coverage_percent}%"></div>
+                <div class="progress-bar-fill" style="width: ${item.coverage_percent}%; background: var(--secondary);"></div>
               </div>
             </div>
           </td>
           <td>
-            <div style="font-weight: 800; font-size: 1.1rem; color: ${item.score >= 80 ? '#059669' : (item.score >= 50 ? '#d97706' : '#64748b')};">
-              ${item.score}
-            </div>
+            <span style="font-weight: 700; font-size: 1.05rem; color: var(--primary);">${item.score}</span>
           </td>
           <td>
             <span class="badge-type ${typeBadgeClass}">${item.classification}</span>
-            <div style="font-size: 0.75rem; color: var(--slate-600); margin-top: 0.2rem;">Confidence: ${item.confidence_percent}</div>
+            <div style="font-size: 0.75rem; color: var(--slate-600); margin-top: 0.25rem;">${item.confidence_percent} conf.</div>
           </td>
-          <td>
-            <div class="tags-list">
-              ${coveredTags}
-              ${missingTags}
+          <td style="max-width: 340px;">
+            <div class="tags-list" style="margin-bottom: 0.35rem;">
+              ${coveredPills}
             </div>
+            ${item.missing_products_list && item.missing_products_list.length > 0 ? `<div class="tags-list" style="opacity: 0.65; margin-top: 0.2rem;">${missingPills}</div>` : ''}
           </td>
           <td>
-            <div style="font-size: 0.75rem; color: var(--slate-600); margin-bottom: 0.35rem;">${item.contact_info || '1688 WangWang'}</div>
-            <a href="${item.shop_url}" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; text-decoration: none;">View Shop ↗</a>
+            <div class="contact-box">
+              ${phoneDisplay}
+              ${personDisplay}
+              ${addressDisplay}
+              <div class="contact-actions-group">
+                <a href="${item.contact_page_url || (item.shop_url ? item.shop_url + 'page/contactinfo.htm' : '#')}" target="_blank" rel="noopener noreferrer" class="btn-contact-action btn-contact-page" title="Open official verified phone, manager and factory address on 1688">
+                  📋 Official 1688 Contact Page ↗
+                </a>
+                <a href="${item.chat_url || '#'}" target="_blank" rel="noopener noreferrer" class="btn-contact-action btn-chat" title="Chat via AliWangWang Web IM">
+                  💬 AliWangWang Chat ↗
+                </a>
+                <a href="${item.shop_url}" target="_blank" rel="noopener noreferrer" class="btn-contact-action btn-shop" title="Open Store">
+                  🏪 Store Homepage ↗
+                </a>
+              </div>
+            </div>
           </td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    // Export functions
+    // Export Helpers
     async function exportSingle(format) {
-      if (!currentSingleData) return;
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = `/api/export/single/${format}`;
-      form.target = '_blank';
+      if (!currentSingleData) {
+        alert('No single search results to export. Please perform a search first.');
+        return;
+      }
 
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'data';
-      input.value = JSON.stringify(currentSingleData);
-      form.appendChild(input);
+      const endpoint = format === 'excel' ? '/api/export/single/excel' : '/api/export/single/csv';
+      try {
+        const resp = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(currentSingleData)
+        });
 
-      document.body.appendChild(form);
-      form.submit();
-      document.body.removeChild(form);
+        if (!resp.ok) throw new Error('Export failed: ' + resp.statusText);
+
+        const blob = await resp.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        const querySlug = (currentSingleData.query || 'results').replace(/\s+/g, '_');
+        a.download = `1688_Sourcing_${querySlug}.${format === 'excel' ? 'xlsx' : 'csv'}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        alert('Export error: ' + err.message);
+      }
     }
 
     async function exportMulti(format) {
-      if (!currentMultiData) return;
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = `/api/export/multi/${format}`;
-      form.target = '_blank';
+      if (!currentMultiData) {
+        alert('No multi-product results to export. Please perform a search first.');
+        return;
+      }
 
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'data';
-      input.value = JSON.stringify(currentMultiData);
-      form.appendChild(input);
+      const endpoint = format === 'excel' ? '/api/export/multi/excel' : '/api/export/multi/csv';
+      try {
+        const resp = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(currentMultiData)
+        });
 
-      document.body.appendChild(form);
-      form.submit();
-      document.body.removeChild(form);
+        if (!resp.ok) throw new Error('Export failed: ' + resp.statusText);
+
+        const blob = await resp.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `1688_Multi_Product_Coverage.${format === 'excel' ? 'xlsx' : 'csv'}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        alert('Export error: ' + err.message);
+      }
     }
 
     // Initialize on load
-    window.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
       loadStatus();
     });
   </script>

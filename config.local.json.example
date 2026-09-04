@@ -1,6 +1,7 @@
 {
-  "provider_name": "demo",
-  "provider_api_key": "",
-  "provider_base_url": "https://api.parsebot.com/v1",
-  "demo_mode": true
+  "provider_name": "apify",
+  "provider_api_key": "YOUR_APIFY_API_TOKEN",
+  "actor_id": "schnellscrapers/1688-supplier-leads",
+  "provider_base_url": "https://api.apify.com/v2",
+  "demo_mode": false
 }

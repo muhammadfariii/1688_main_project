@@ -26,7 +26,7 @@ An Alibaba/1688 supplier sourcing and qualification web application designed to 
    - Works immediately out of the box without any API keys using realistic mock supplier data from Chinese industrial hubs (Yongkang, Yiwu, Dongguan, Chaozhou, Shenzhen, Ningbo, etc.).
 
 5. **Pluggable Provider Architecture**:
-   - Abstract adapter layer (`BaseProviderAdapter`) allows swapping between `DemoAdapter` and live providers (e.g., `ParseBotAdapter`) without modifying frontend or business logic.
+   - Abstract adapter layer (`BaseProviderAdapter`) allows swapping between `DemoAdapter` and live providers (e.g., `Apify1688Adapter`) without modifying frontend or business logic.
    - Sensitive credentials remain strictly server-side.
 
 ---
@@ -49,7 +49,7 @@ An Alibaba/1688 supplier sourcing and qualification web application designed to 
   Provider Adapter (adapters.py)
    ┌────┴────────────────────────┐
    ▼                             ▼
-DemoAdapter (Mock)       ParseBotAdapter (Live API)
+DemoAdapter (Mock)       Apify1688Adapter (Live API)
 ```
 
 ---
@@ -101,7 +101,7 @@ If running in **Demo Mode**, no configuration or API keys are required.
 To connect a live provider API later:
 1. In Replit Secrets (Lock icon) or in a `.env` file (server-side only):
    - `PROVIDER_API_KEY`: Your 1688 provider API token.
-   - `PROVIDER_NAME`: `parsebot` (or custom provider).
+   - `PROVIDER_NAME`: `apify` (or custom provider).
    - `PROVIDER_BASE_URL`: (Optional) Provider endpoint URL.
    - `DEMO_MODE`: Set to `false` when enabling live API mode.
 
@@ -145,7 +145,7 @@ python -m unittest discover -s tests
 |---|---|
 | `app.py` | FastAPI application, web routes, REST API endpoints, static file mounting |
 | `classifier.py` | Heuristic multi-signal factory vs. trading company classification engine |
-| `adapters.py` | Provider adapter interface (`BaseProviderAdapter`), `DemoAdapter`, `ParseBotAdapter` |
+| `adapters.py` | Provider adapter interface (`BaseProviderAdapter`), `DemoAdapter`, `Apify1688Adapter` |
 | `search_engine.py` | Single-product ranking & multi-product coverage aggregation engine |
 | `exporter.py` | Formatted Excel (`.xlsx`) and CSV (`utf-8-sig`) export generators |
 | `config.py` | Configuration manager (reads environment variables, Replit secrets, local fallback) |
@@ -161,4 +161,4 @@ python -m unittest discover -s tests
 ## ⚠️ Important Real-World Note on 1688 API Data
 - Third-party 1688 providers do not maintain a universal standardized schema.
 - Factory classification is heuristic/signal-based because 1688 vendor registrations can vary.
-- The `ParseBotAdapter` skeleton is ready to be mapped to your chosen vendor's live API response format when API documentation is provided.
+- The `Apify1688Adapter` skeleton is ready to be mapped to your chosen vendor's live API response format when API documentation is provided.
