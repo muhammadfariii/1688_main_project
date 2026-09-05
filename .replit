@@ -43,13 +43,10 @@ outputType = "webview"
 
 [userenv.shared]
 provider_base_url = "https://api.parse.bot/scraper/bce3cd9b-591a-4e87-a406-6e57ab0dd092"
+provider_name = "parsebot"
+provider_api_key = "pmx_47744145266284952786bd82187618de"
+demo_mode = "false"
 
 [userenv.production]
-demo_mode = "true"
-provider_api_key = "pmx_47744145266284952786bd82187618de"
-provider_name = "demo"
 
 [userenv.development]
-demo_mode = "false"
-provider_api_key = ""
-provider_name = "parsebot"
