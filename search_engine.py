@@ -27,7 +27,7 @@ class SourcingSearchEngine:
         name = str(item.get("supplier_name") or item.get("company_name_cn") or "").strip().lower()
         return sup_id or shop_url or name
 
-    def search_single_product(self, product_query: str, factory_only: bool = False) -> Dict[str, Any]:
+    def search_single_product(self, product_query: str, factory_only: bool = False, pages: int = 1) -> Dict[str, Any]:
         """
         Executes single product search, deduplicates suppliers/factories, classifies each,
         and ranks by factory confidence.
@@ -37,9 +37,11 @@ class SourcingSearchEngine:
         provider_info = active_adapter.get_provider_info()
         data_source = "demo" if provider_info.get("is_demo") else "live"
 
+        num_pages = max(1, min(10, int(pages or 1)))
         if not query:
             return {
                 "query": "",
+                "pages_requested": num_pages,
                 "total_count": 0,
                 "factories_count": 0,
                 "trading_count": 0,
@@ -48,7 +50,7 @@ class SourcingSearchEngine:
                 "results": []
             }
 
-        raw_suppliers = active_adapter.search_single_product(query)
+        raw_suppliers = active_adapter.search_single_product(query, page=num_pages, page_size=20 * num_pages)
 
         # 1. Deduplicate suppliers across raw results
         deduped_suppliers: Dict[str, Dict[str, Any]] = {}
@@ -171,6 +173,7 @@ class SourcingSearchEngine:
 
         return {
             "query": query,
+            "pages_requested": num_pages,
             "total_count": len(processed_results),
             "factories_count": factories_count,
             "trading_count": trading_count,
@@ -179,7 +182,7 @@ class SourcingSearchEngine:
             "results": processed_results
         }
 
-    def search_multi_products(self, product_lines: List[str]) -> Dict[str, Any]:
+    def search_multi_products(self, product_lines: List[str], pages: int = 1) -> Dict[str, Any]:
         """
         Executes multi-product search, calculates supplier coverage across the full product list,
         and ranks deduplicated suppliers by product coverage and capability score.
@@ -194,10 +197,12 @@ class SourcingSearchEngine:
         provider_info = active_adapter.get_provider_info()
         data_source = "demo" if provider_info.get("is_demo") else "live"
 
+        num_pages = max(1, min(10, int(pages or 1)))
         total_queries_count = len(unique_queries)
         if total_queries_count == 0:
             return {
                 "queries": [],
+                "pages_requested": num_pages,
                 "total_queries": 0,
                 "total_suppliers_found": 0,
                 "data_source": data_source,
@@ -205,7 +210,7 @@ class SourcingSearchEngine:
                 "results": []
             }
 
-        results_by_query = active_adapter.search_multi_products(unique_queries)
+        results_by_query = active_adapter.search_multi_products(unique_queries, pages=num_pages)
 
         supplier_map: Dict[str, Dict[str, Any]] = {}
 
@@ -319,6 +324,7 @@ class SourcingSearchEngine:
 
         return {
             "queries": unique_queries,
+            "pages_requested": num_pages,
             "total_queries": total_queries_count,
             "total_suppliers_found": len(ranked_suppliers),
             "data_source": data_source,

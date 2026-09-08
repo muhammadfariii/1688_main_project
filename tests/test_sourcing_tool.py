@@ -488,5 +488,45 @@ class TestFastAPIEndpoints(unittest.TestCase):
         with self.assertRaises(Exception):
             adapter.search_single_product("Tumbler")
 
+
+    
+
+    def test_single_search_with_custom_pages(self):
+        engine = SourcingSearchEngine(adapter=DemoAdapter())
+        res = engine.search_single_product("Water Bottle", pages=2)
+        self.assertEqual(res["pages_requested"], 2)
+        self.assertGreaterEqual(res["total_count"], 10)
+
+    def test_multi_search_with_custom_pages(self):
+        engine = SourcingSearchEngine(adapter=DemoAdapter())
+        res = engine.search_multi_products(["Water Bottle", "Coffee Mug"], pages=2)
+        self.assertEqual(res["pages_requested"], 2)
+        self.assertGreaterEqual(res["total_suppliers_found"], 1)
+
+    def test_update_pages_config_api(self):
+        resp = self.client.post("/api/config/pages", json={"pages": 3})
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertEqual(data["status"], "updated")
+        self.assertEqual(data["default_pages_per_keyword"], 3)
+        # Restore default
+        self.client.post("/api/config/pages", json={"pages": 1})
+
+    @patch("requests.post")
+    def test_apify_adapter_custom_pages_payload(self, mock_post):
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = []
+        mock_post.return_value = mock_resp
+
+        adapter = Apify1688Adapter(api_token="apify_api_test")
+        adapter.search_single_product("Tumbler", page=3)
+
+        self.assertTrue(mock_post.called)
+        _, kwargs = mock_post.call_args
+        payload = kwargs.get("json", {})
+        self.assertEqual(payload.get("maxPagesPerKeyword"), 3)
+        self.assertEqual(payload.get("maxSuppliersPerKeyword"), 60)
+
 if __name__ == "__main__":
     unittest.main()

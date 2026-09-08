@@ -65,10 +65,15 @@
       gap: 0.75rem;
     }
 
-    .brand-logo img {
-      height: 48px;
-      width: auto;
-      display: block;
+    .brand-logo {
+      background: linear-gradient(135deg, #ff6000 0%, #ff8533 100%);
+      color: white;
+      font-weight: 800;
+      font-size: 1.1rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 4px rgba(255, 96, 0, 0.2);
     }
 
     .brand-title h1 {
@@ -998,6 +1003,97 @@
       color: #0f172a;
     }
 
+
+    /* Page Configuration Controls */
+    .form-options-left {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .page-selector-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: #f8fafc;
+      border: 1px solid var(--slate-300);
+      border-radius: 6px;
+      padding: 0.35rem 0.65rem;
+      transition: all 0.15s ease;
+    }
+
+    .page-selector-group:hover, .page-selector-group:focus-within {
+      border-color: var(--primary);
+      background: #eff6ff;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    }
+
+    .page-selector-label {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--slate-700);
+      user-select: none;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .select-pages {
+      background: transparent;
+      border: none;
+      color: var(--slate-900);
+      font-size: 0.825rem;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      padding: 0.1rem 0.2rem;
+    }
+
+    .select-pages option {
+      background: white;
+      color: var(--slate-900);
+    }
+
+    .select-pages-modal {
+      background: white;
+      border: 1px solid var(--slate-300);
+      border-radius: 6px;
+      padding: 0.35rem 0.65rem;
+      font-size: 0.85rem;
+      color: var(--slate-800);
+      font-weight: 500;
+      outline: none;
+    }
+
+    .select-pages-modal:focus {
+      border-color: var(--primary);
+    }
+
+    .diag-section-divider {
+      border-top: 1px solid var(--slate-200);
+      margin: 1rem 0 0.75rem 0;
+    }
+
+    .diag-section-title {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-bottom: 0.6rem;
+    }
+
+    .diag-hint {
+      font-size: 0.75rem;
+      color: var(--slate-500);
+      margin: 0.35rem 0 0.75rem 0;
+      line-height: 1.35;
+    }
+
   </style>
 </head>
 <body>
@@ -1008,7 +1104,7 @@
   <!-- Header -->
   <header>
     <div class="brand">
-      <div class="brand-logo"><img src="/static/logo.png" alt="Amanda International Group"></div>
+      <div class="brand-logo">1688</div>
       <div class="brand-title">
         <h1>1688 Sourcing Tool</h1>
         <p>Heuristic Factory Identifier & Supplier Multi-Product Coverage Aggregator</p>
@@ -1068,6 +1164,28 @@
           <span class="diag-label">Status Info:</span>
           <span class="diag-val" id="diagReason" style="font-weight: normal; font-size: 0.8rem;">-</span>
         </div>
+        <div class="diag-section-divider"></div>
+        <div class="diag-section-title">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          </svg>
+          <span>Default Scraping Depth (Pages per Keyword)</span>
+        </div>
+        <div class="diag-row" style="align-items: center;">
+          <span class="diag-label">Default Fetch Depth:</span>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <select id="diagDefaultPages" class="select-pages-modal" onchange="updateDefaultPagesConfig(this.value)">
+              <option value="1">1 Page per keyword (Standard, ~20 items)</option>
+              <option value="2">2 Pages per keyword (~40 items)</option>
+              <option value="3">3 Pages per keyword (~60 items)</option>
+              <option value="5">5 Pages per keyword (~100 items)</option>
+            </select>
+            <span id="diagPagesSaveIndicator" style="display: none; color: #16a34a; font-size: 0.75rem; font-weight: 600;">✓ Saved</span>
+          </div>
+        </div>
+        <p class="diag-hint">
+          Controls how many 1688 result pages are queried per keyword by default. Keeping this at 1–2 pages minimizes Apify usage costs ($0.45/1k leads) while finding top-ranked factories.
+        </p>
       </div>
       <div id="testConnResult" style="margin-top: 0.75rem; font-size: 0.8rem; display: none; padding: 0.5rem; border-radius: 6px;"></div>
       <div class="diag-actions">
@@ -1120,7 +1238,7 @@
         <div class="card-title">Single Product Factory Search</div>
         <div class="card-desc">Enter a product name to search 1688 and identify verified direct factories versus commercial trading companies using heuristic signals.</div>
 
-        <form id=\"singleSearchForm\" onsubmit="handleSingleSearch(event)">
+        <form id="singleSearchForm" onsubmit="handleSingleSearch(event)">
           <div class="form-group">
             <label for="singleProductInput">Product Name / Keywords</label>
             <input type="text" id="singleProductInput" class="input-text" placeholder="e.g. Stainless Steel Water Bottle, Borosilicate Glass Jar, Silicone Spatula" required>
@@ -1134,10 +1252,29 @@
           </div>
 
           <div class="form-actions">
-            <label class="checkbox-label">
-              <input type="checkbox" id="factoryOnlyCheckbox">
-              <span>Show Verified Factories Only</span>
-            </label>
+            <div class="form-options-left">
+              <div class="page-selector-group" title="Set how many 1688 search result pages to fetch (Each page is ~20 items)">
+                <label for="singlePagesInput" class="page-selector-label">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  <span>Pages to Fetch:</span>
+                </label>
+                <select id="singlePagesInput" class="select-pages" onchange="persistSelectedPages('single', this.value)">
+                  <option value="1">1 Page (~20 items • Fast & Lowest Cost)</option>
+                  <option value="2">2 Pages (~40 items • Balanced)</option>
+                  <option value="3">3 Pages (~60 items • In-Depth)</option>
+                  <option value="5">5 Pages (~100 items • Broad Sweep)</option>
+                  <option value="10">10 Pages (~200 items • Maximum)</option>
+                </select>
+              </div>
+
+              <label class="checkbox-label">
+                <input type="checkbox" id="factoryOnlyCheckbox">
+                <span>Show Verified Factories Only</span>
+              </label>
+            </div>
+
             <button type="submit" class="btn-primary" id="btnSingleSearch">
               <span>Search Factories</span>
             </button>
@@ -1152,6 +1289,7 @@
             <div class="results-summary">
               <span id="singleResultsCount">Found 0 suppliers</span>
               <span class="source-badge" id="singleSourceBadge">Demo Data</span>
+              <span class="results-count-pill" id="singlePagesPill">1 Page Fetched</span>
               <span class="results-count-pill" id="singleFactoryPill">0 Factories</span>
             </div>
             <div class="export-group">
@@ -1206,7 +1344,23 @@
           </div>
 
           <div class="form-actions">
-            <div></div>
+            <div class="form-options-left">
+              <div class="page-selector-group" title="Set how many 1688 search result pages to fetch for each product in your list">
+                <label for="multiPagesInput" class="page-selector-label">
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  <span>Pages per Product:</span>
+                </label>
+                <select id="multiPagesInput" class="select-pages" onchange="persistSelectedPages('multi', this.value)">
+                  <option value="1">1 Page / item (Recommended for Catalogs)</option>
+                  <option value="2">2 Pages / item (Expanded Overlap)</option>
+                  <option value="3">3 Pages / item (Deep Sweep)</option>
+                  <option value="5">5 Pages / item (Maximum)</option>
+                </select>
+              </div>
+            </div>
+
             <button type="submit" class="btn-primary" id="btnMultiSearch">
               <span>Find Suppliers by Coverage</span>
             </button>
@@ -1221,6 +1375,7 @@
             <div class="results-summary">
               <span id="multiResultsSummary">Analyzed 0 products across 0 suppliers</span>
               <span class="source-badge" id="multiSourceBadge">Demo Data</span>
+              <span class="results-count-pill" id="multiPagesPill">1 Page/item</span>
             </div>
             <div class="export-group">
               <button type="button" class="btn-secondary btn-excel" onclick="exportMulti('excel')">
@@ -1272,6 +1427,53 @@
   </footer>
 
   <script>
+    // Page persistence & config helpers
+    function persistSelectedPages(type, val) {
+      try {
+        localStorage.setItem('1688_pages_' + type, val);
+      } catch (e) {}
+    }
+
+    function restoreSelectedPages() {
+      try {
+        const s = localStorage.getItem('1688_pages_single');
+        if (s && document.getElementById('singlePagesInput')) {
+          document.getElementById('singlePagesInput').value = s;
+        }
+        const m = localStorage.getItem('1688_pages_multi');
+        if (m && document.getElementById('multiPagesInput')) {
+          document.getElementById('multiPagesInput').value = m;
+        }
+      } catch (e) {}
+    }
+
+    async function updateDefaultPagesConfig(val) {
+      const pages = parseInt(val, 10) || 1;
+      const indicator = document.getElementById('diagPagesSaveIndicator');
+      try {
+        const resp = await fetch('/api/config/pages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pages: pages })
+        });
+        if (resp.ok) {
+          if (indicator) {
+            indicator.style.display = 'inline';
+            setTimeout(() => { indicator.style.display = 'none'; }, 2000);
+          }
+          showToast(`✓ Default scraping depth updated to ${pages} page(s)`, 'info', 2500);
+          if (!localStorage.getItem('1688_pages_single') && document.getElementById('singlePagesInput')) {
+            document.getElementById('singlePagesInput').value = pages;
+          }
+          if (!localStorage.getItem('1688_pages_multi') && document.getElementById('multiPagesInput')) {
+            document.getElementById('multiPagesInput').value = pages;
+          }
+        }
+      } catch (e) {
+        showToast('Failed to save default page settings: ' + e.message, 'warning');
+      }
+    }
+
     let currentSingleData = null;
     let currentMultiData = null;
     let currentStatusData = null;
@@ -1328,7 +1530,7 @@
     // Direct toggle when clicking the top button
     async function toggleModeDirectly() {
       if (!currentStatusData) {
-        await loadStatus();
+        await loadStatus(); restoreSelectedPages();
         if (!currentStatusData) return;
       }
 
@@ -1371,7 +1573,7 @@
       if (currentStatusData) {
         updateDiagModal(currentStatusData);
       } else {
-        loadStatus();
+        loadStatus(); restoreSelectedPages();
       }
     }
 
@@ -1386,6 +1588,9 @@
       document.getElementById('diagApiKey').innerText = data.has_api_key ? (data.masked_api_key || 'Configured') : 'None (Set PROVIDER_API_KEY)';
       document.getElementById('diagBaseUrl').innerText = data.base_url || 'N/A (Built-in Demo Generator)';
       document.getElementById('diagReason').innerText = data.status_reason || '';
+      if (data.default_pages_per_keyword && document.getElementById('diagDefaultPages')) {
+        document.getElementById('diagDefaultPages').value = data.default_pages_per_keyword;
+      }
       
       const toggleBtn = document.getElementById('btnToggleMode');
       if (toggleBtn) {
@@ -1491,7 +1696,7 @@
       try {
         const resp = await fetch('/api/config/reload', { method: 'POST' });
         if (resp.ok) {
-          await loadStatus();
+          await loadStatus(); restoreSelectedPages();
           showToast('Configuration reloaded successfully', 'info');
         }
       } catch (e) {
@@ -1593,10 +1798,11 @@
       btn.innerHTML = '<span class="spinner"></span> Searching...';
 
       try {
+        const pagesVal = parseInt(document.getElementById('singlePagesInput').value, 10) || 1;
         const resp = await fetch('/api/search/single', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ product: product, factory_only: factoryOnly })
+          body: JSON.stringify({ product: product, factory_only: factoryOnly, pages: pagesVal })
         });
 
         if (!resp.ok) {
@@ -1625,6 +1831,11 @@
 
       document.getElementById('singleResultsCount').innerText = `Found ${data.total_count} suppliers for "${data.query}"`;
       document.getElementById('singleFactoryPill').innerText = `${data.factories_count} Factories, ${data.trading_count} Trading`;
+      const sPagesPill = document.getElementById('singlePagesPill');
+      if (sPagesPill) {
+        const pCount = data.pages_requested || 1;
+        sPagesPill.innerText = `${pCount} Page${pCount > 1 ? 's' : ''} Fetched`;
+      }
 
       // Set source badge
       const sourceBadge = document.getElementById('singleSourceBadge');
@@ -1779,10 +1990,11 @@
       btn.innerHTML = '<span class="spinner"></span> Analyzing Catalogs...';
 
       try {
+        const multiPagesVal = parseInt(document.getElementById('multiPagesInput').value, 10) || 1;
         const resp = await fetch('/api/search/multi', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ products: productLines })
+          body: JSON.stringify({ products: productLines, pages: multiPagesVal })
         });
 
         if (!resp.ok) {
@@ -1810,6 +2022,11 @@
       tbody.innerHTML = '';
 
       document.getElementById('multiResultsSummary').innerText = `Analyzed ${data.total_queries} product queries across ${data.total_suppliers_found} suppliers`;
+      const mPagesPill = document.getElementById('multiPagesPill');
+      if (mPagesPill) {
+        const pCount = data.pages_requested || 1;
+        mPagesPill.innerText = `${pCount} Page${pCount > 1 ? 's' : ''}/item`;
+      }
 
       const sourceBadge = document.getElementById('multiSourceBadge');
       if (data.data_source === 'live') {
@@ -1991,7 +2208,7 @@
 
     // Initialize on load
     document.addEventListener('DOMContentLoaded', () => {
-      loadStatus();
+      loadStatus(); restoreSelectedPages();
     });
   </script>
 </body>

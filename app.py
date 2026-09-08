@@ -47,15 +47,21 @@ search_engine = SourcingSearchEngine()
 class SingleSearchRequest(BaseModel):
     product: str
     factory_only: bool = False
+    pages: Optional[int] = 1
 
 
 class MultiSearchRequest(BaseModel):
     products: Optional[List[str]] = []
     products_text: Optional[str] = None
+    pages: Optional[int] = 1
 
 
 class ToggleModeRequest(BaseModel):
     demo_mode: bool
+
+
+class PagesConfigRequest(BaseModel):
+    pages: int
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -105,6 +111,17 @@ async def toggle_demo_mode(payload: ToggleModeRequest):
     }
 
 
+@app.post("/api/config/pages")
+async def update_pages_config(payload: PagesConfigRequest):
+    """Updates default pages per keyword in system config."""
+    new_val = config.set_default_pages(payload.pages)
+    return {
+        "status": "updated",
+        "default_pages_per_keyword": new_val,
+        "config": config.get_public_status()
+    }
+
+
 @app.post("/api/provider/test")
 async def test_provider_connection():
     """Tests connection to the currently configured provider."""
@@ -121,7 +138,7 @@ async def search_single(payload: SingleSearchRequest):
         raise HTTPException(status_code=400, detail="Product name is required.")
     
     try:
-        results = search_engine.search_single_product(product, factory_only=payload.factory_only)
+        results = search_engine.search_single_product(product, factory_only=payload.factory_only, pages=payload.pages or 1)
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
@@ -139,7 +156,7 @@ async def search_multi(payload: MultiSearchRequest):
         raise HTTPException(status_code=400, detail="At least one product is required.")
 
     try:
-        results = search_engine.search_multi_products(products_list)
+        results = search_engine.search_multi_products(products_list, pages=payload.pages or 1)
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Multi-product search failed: {str(e)}")

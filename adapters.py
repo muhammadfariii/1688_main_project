@@ -233,7 +233,7 @@ class BaseProviderAdapter(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def search_multi_products(self, queries: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+    def search_multi_products(self, queries: List[str], pages: int = 1) -> Dict[str, List[Dict[str, Any]]]:
         pass
 
     @abc.abstractmethod
@@ -478,13 +478,19 @@ class DemoAdapter(BaseProviderAdapter):
             return []
 
         results = []
-        for i, profile in enumerate(self.VENDOR_PROFILES):
-            results.append(self._build_supplier_dict(profile, clean_q, seed_offset=i))
+        num_pages = max(1, page)
+        for p in range(num_pages):
+            for i, profile in enumerate(self.VENDOR_PROFILES):
+                p_copy = dict(profile)
+                if p > 0:
+                    p_copy["brand_en"] = f"{profile['brand_en']}P{p+1}"
+                results.append(self._build_supplier_dict(p_copy, clean_q, seed_offset=i + p * 10))
         return results
 
-    def search_multi_products(self, queries: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+    def search_multi_products(self, queries: List[str], pages: int = 1) -> Dict[str, List[Dict[str, Any]]]:
         results_by_query = {}
         cleaned_queries = [q.strip().title() for q in queries if q and q.strip()]
+        num_pages = max(1, pages)
 
         for q_idx, q in enumerate(cleaned_queries):
             results_for_item = []
@@ -493,7 +499,7 @@ class DemoAdapter(BaseProviderAdapter):
                 item_seed = int(hashlib.md5(f"{brand}_{q}".encode("utf-8")).hexdigest()[:6], 16)
                 prob = (item_seed % 100) / 100.0
 
-                if prob <= profile["coverage_tier"] or (v_idx < 2 and q_idx < 4):
+                if prob <= profile["coverage_tier"] or (v_idx < 2 and q_idx < (3 + num_pages)):
                     results_for_item.append(self._build_supplier_dict(profile, q, seed_offset=q_idx))
 
             results_by_query[q] = results_for_item
@@ -625,11 +631,14 @@ class Apify1688Adapter(BaseProviderAdapter):
         if not self.api_token or not self.api_token.strip():
             raise ValueError("Apify API Token is missing. Please configure PROVIDER_API_KEY or switch to Demo Mode.")
 
+        num_pages = max(1, page)
+        max_suppliers = max(page_size, num_pages * 20)
+
         url = self._get_run_sync_url()
         payload = {
             "keywords": [clean_q],
-            "maxSuppliersPerKeyword": page_size,
-            "maxPagesPerKeyword": max(1, page),
+            "maxSuppliersPerKeyword": max_suppliers,
+            "maxPagesPerKeyword": num_pages,
             "maxOffersPerSupplier": 3,
             "sortBy": "bestSelling",
             "manufacturersOnly": False,
@@ -662,7 +671,7 @@ class Apify1688Adapter(BaseProviderAdapter):
             print(f"[Apify1688Adapter] {msg}")
             raise RuntimeError(msg)
 
-    def search_multi_products(self, queries: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+    def search_multi_products(self, queries: List[str], pages: int = 1) -> Dict[str, List[Dict[str, Any]]]:
         cleaned_queries = [q.strip() for q in queries if q and q.strip()]
         if not cleaned_queries:
             return {}
@@ -670,11 +679,14 @@ class Apify1688Adapter(BaseProviderAdapter):
         if not self.api_token or not self.api_token.strip():
             raise ValueError("Apify API Token is missing. Please configure PROVIDER_API_KEY or switch to Demo Mode.")
 
+        num_pages = max(1, pages)
+        max_suppliers = max(10, num_pages * 10)
+
         url = self._get_run_sync_url()
         payload = {
             "keywords": cleaned_queries,
-            "maxSuppliersPerKeyword": 10,
-            "maxPagesPerKeyword": 1,
+            "maxSuppliersPerKeyword": max_suppliers,
+            "maxPagesPerKeyword": num_pages,
             "maxOffersPerSupplier": 2,
             "sortBy": "bestSelling",
             "manufacturersOnly": False,
@@ -736,7 +748,7 @@ class Apify1688Adapter(BaseProviderAdapter):
             last_err = None
             for q in cleaned_queries:
                 try:
-                    results[q] = self.search_single_product(q, page=1, page_size=10)
+                    results[q] = self.search_single_product(q, page=num_pages, page_size=10 * num_pages)
                 except Exception as ex:
                     print(f"[Apify1688Adapter] Sequential error for '{q}': {ex}")
                     results[q] = []

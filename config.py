@@ -1,6 +1,6 @@
 """
 Configuration module for 1688 Sourcing Tool.
-Manages provider settings, API keys, actor IDs, and operational modes.
+Manages provider settings, API keys, actor IDs, page scraping limits, and operational modes.
 Supports environment variables (Replit Secrets / Docker), local JSON config, and runtime toggles.
 """
 
@@ -28,6 +28,7 @@ class AppConfig:
         self.host = "0.0.0.0"
         self.port = int(os.environ.get("PORT", 8000))
         self.default_page_size = 20
+        self.default_pages_per_keyword = 1
 
         # 2. Check local config file if present
         if LOCAL_CONFIG_FILE.exists():
@@ -40,6 +41,8 @@ class AppConfig:
                     self.provider_base_url = data.get("provider_base_url", self.provider_base_url)
                     if "demo_mode" in data:
                         self.demo_mode = bool(data["demo_mode"])
+                    if "default_pages_per_keyword" in data:
+                        self.default_pages_per_keyword = max(1, min(10, int(data["default_pages_per_keyword"])))
             except Exception as e:
                 print(f"[Config] Warning: Failed to parse {LOCAL_CONFIG_FILE}: {e}")
 
@@ -64,6 +67,14 @@ class AppConfig:
         env_demo = os.environ.get("DEMO_MODE")
         if env_demo is not None:
             self.demo_mode = env_demo.lower().strip() in ("true", "1", "yes")
+
+        # Configurable default pages per keyword
+        env_pages = os.environ.get("DEFAULT_PAGES_PER_KEYWORD") or os.environ.get("MAX_PAGES_PER_KEYWORD")
+        if env_pages:
+            try:
+                self.default_pages_per_keyword = max(1, min(10, int(env_pages)))
+            except ValueError:
+                pass
 
         # 4. If runtime override was set via UI toggle, preserve it
         if self._runtime_demo_mode_override is not None:
@@ -111,6 +122,20 @@ class AppConfig:
                 print(f"[Config] Warning: Could not update {LOCAL_CONFIG_FILE}: {e}")
         return True
 
+    def set_default_pages(self, pages: int) -> int:
+        """Updates default_pages_per_keyword dynamically and saves to local config file."""
+        self.default_pages_per_keyword = max(1, min(10, int(pages)))
+        if LOCAL_CONFIG_FILE.exists():
+            try:
+                with open(LOCAL_CONFIG_FILE, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                data["default_pages_per_keyword"] = self.default_pages_per_keyword
+                with open(LOCAL_CONFIG_FILE, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=2)
+            except Exception as e:
+                print(f"[Config] Warning: Could not update {LOCAL_CONFIG_FILE}: {e}")
+        return self.default_pages_per_keyword
+
     def get_public_status(self) -> Dict[str, Any]:
         """Returns safe status information without exposing raw secrets."""
         has_key = bool(self.provider_api_key.strip())
@@ -138,6 +163,7 @@ class AppConfig:
             "has_api_key": has_key,
             "masked_api_key": masked_key,
             "base_url": self.provider_base_url if not self.demo_mode else "",
+            "default_pages_per_keyword": self.default_pages_per_keyword,
             "status_label": status_label,
             "status_reason": reason
         }
